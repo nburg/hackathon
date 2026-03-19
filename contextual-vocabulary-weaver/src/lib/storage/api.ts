@@ -17,7 +17,7 @@ export async function getSettings(): Promise<Settings> {
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
   const current = await getSettings();
   await chrome.storage.sync.set({
-    [StorageKeys.SETTINGS]: { ...current, ...settings }
+    [StorageKeys.SETTINGS]: { ...current, ...settings },
   });
 }
 

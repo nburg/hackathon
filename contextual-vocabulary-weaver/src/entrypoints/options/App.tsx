@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { Settings } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
@@ -38,14 +39,14 @@ export default function App() {
     return <LoadingScreen message="Initializing..." />;
   }
 
-  const handleUpdate = async (updates: any) => {
+  const handleUpdate = async (updates: Partial<Settings>) => {
     setSaving(true);
     setSaveMessage(null);
     try {
       await updateSettings(updates);
       setSaveMessage('✓ Saved successfully');
       setTimeout(() => setSaveMessage(null), 2000);
-    } catch (err) {
+    } catch {
       setSaveMessage('❌ Failed to save');
       setTimeout(() => setSaveMessage(null), 3000);
     } finally {
@@ -74,7 +75,7 @@ export default function App() {
 
   const removePattern = (pattern: string) => {
     const current = settings!.siteRegexPatterns || [];
-    updateSettings({ siteRegexPatterns: current.filter(p => p !== pattern) });
+    updateSettings({ siteRegexPatterns: current.filter((p) => p !== pattern) });
   };
 
   const densityLabels = ['Beginner', 'Intermediate', 'Aggressive'];
@@ -92,9 +93,13 @@ export default function App() {
             Contextual Vocabulary Weaver - Settings
           </h1>
           {saveMessage && (
-            <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
-              saveMessage.includes('✓') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+            <div
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                saveMessage.includes('✓')
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
+              }`}
+            >
               {saveMessage}
             </div>
           )}
@@ -148,29 +153,37 @@ export default function App() {
           {/* Site Filter (Regex Patterns) */}
           <Card title="Site Filter (Regex Patterns)">
             <p className="text-sm text-gray-600 mb-3">
-              If any patterns are added, only URLs matching at least one will be altered.
-              Leave empty to apply to all sites.
+              If any patterns are added, only URLs matching at least one will be altered. Leave
+              empty to apply to all sites.
             </p>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={newPattern}
-                onChange={(e) => { setNewPattern(e.target.value); setPatternError(''); }}
+                onChange={(e) => {
+                  setNewPattern(e.target.value);
+                  setPatternError('');
+                }}
                 onKeyDown={(e) => e.key === 'Enter' && addPattern()}
                 placeholder="e.g. .*\.wikipedia\.org.*"
                 className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <Button variant="primary" onClick={addPattern}>Add</Button>
+              <Button variant="primary" onClick={addPattern}>
+                Add
+              </Button>
             </div>
-            {patternError && (
-              <p className="text-xs text-red-500 mb-2">{patternError}</p>
-            )}
+            {patternError && <p className="text-xs text-red-500 mb-2">{patternError}</p>}
             {(settings.siteRegexPatterns || []).length === 0 ? (
-              <p className="text-xs text-gray-400 italic">No patterns — extension runs on all sites.</p>
+              <p className="text-xs text-gray-400 italic">
+                No patterns — extension runs on all sites.
+              </p>
             ) : (
               <ul className="space-y-1">
                 {settings.siteRegexPatterns.map((pattern) => (
-                  <li key={pattern} className="flex items-center justify-between bg-gray-100 rounded px-3 py-1.5">
+                  <li
+                    key={pattern}
+                    className="flex items-center justify-between bg-gray-100 rounded px-3 py-1.5"
+                  >
                     <code className="text-sm text-gray-800 break-all">{pattern}</code>
                     <button
                       onClick={() => removePattern(pattern)}
@@ -187,7 +200,8 @@ export default function App() {
           {/* Info Banner */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              💡 <strong>Auto-save enabled:</strong> Your settings are saved automatically as you change them.
+              💡 <strong>Auto-save enabled:</strong> Your settings are saved automatically as you
+              change them.
             </p>
           </div>
         </div>

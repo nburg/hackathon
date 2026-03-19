@@ -6,7 +6,7 @@ export function useVocabulary() {
   const [vocabulary, setVocabulary] = useState<VocabularyData>({
     words: {},
     totalTracked: 0,
-    wordsKnown: 0
+    wordsKnown: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,11 +14,11 @@ export function useVocabulary() {
   useEffect(() => {
     // Initial load
     getVocabulary()
-      .then(data => {
+      .then((data) => {
         setVocabulary(data);
         setError(null);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to load vocabulary:', err);
         setError('Failed to load vocabulary data. Please refresh the page.');
       })
@@ -27,7 +27,10 @@ export function useVocabulary() {
       });
 
     // Listen for changes (P5 will update this)
-    const listener = (changes: any, areaName: string) => {
+    const listener = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string
+    ) => {
       if (areaName === 'local' && changes[StorageKeys.VOCABULARY]) {
         // Transform the data properly when it updates
         getVocabulary().then(setVocabulary).catch(console.error);

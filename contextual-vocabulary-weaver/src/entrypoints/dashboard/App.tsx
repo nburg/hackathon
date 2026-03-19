@@ -29,44 +29,31 @@ export default function App() {
     );
   }
 
-  const wordsList = Object.values(vocabulary.words).sort(
-    (a, b) => b.lastSeen - a.lastSeen
-  );
+  const wordsList = Object.values(vocabulary.words).sort((a, b) => b.lastSeen - a.lastSeen);
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Your Vocabulary Progress
-          </h1>
-          <p className="text-gray-600">
-            Track your Spanish learning journey as you browse the web
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Vocabulary Progress</h1>
+          <p className="text-gray-600">Track your Spanish learning journey as you browse the web</p>
         </div>
 
         <Card className="mb-8">
-          <ProgressIndicator
-            current={vocabulary.wordsKnown}
-            total={vocabulary.totalTracked}
-          />
+          <ProgressIndicator current={vocabulary.wordsKnown} total={vocabulary.totalTracked} />
         </Card>
 
         {wordsList.length === 0 ? (
           <Card>
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📖</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No words tracked yet
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No words tracked yet</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Start browsing websites to see Spanish words replace English ones.
-                Each word you encounter will appear here with your learning progress!
+                Start browsing websites to see Spanish words replace English ones. Each word you
+                encounter will appear here with your learning progress!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={() => chrome.runtime.openOptionsPage()}>
-                  Configure Settings
-                </Button>
+                <Button onClick={() => chrome.runtime.openOptionsPage()}>Configure Settings</Button>
                 <Button
                   variant="secondary"
                   onClick={() => window.open('https://www.bbc.com/news', '_blank')}
@@ -82,9 +69,7 @@ export default function App() {
               <h2 className="text-xl font-semibold text-gray-800">
                 Recent Words ({wordsList.length})
               </h2>
-              <p className="text-sm text-gray-500">
-                Sorted by most recently seen
-              </p>
+              <p className="text-sm text-gray-500">Sorted by most recently seen</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {wordsList.map((word) => (

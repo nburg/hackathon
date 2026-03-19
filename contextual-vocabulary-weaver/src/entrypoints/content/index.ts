@@ -2,7 +2,7 @@ import styles from './styles.css?inline';
 import { TranslationPipeline } from '@lib/translation-pipeline';
 import { STORAGE_KEYS, type ExtensionSettings } from '@lib/types';
 import { checkAndTriggerPhase2 } from '@lib/index';
-import { getSettings, StorageKeys } from '@/lib/storage/api';
+import { getSettings } from '@/lib/storage/api';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -15,8 +15,12 @@ export default defineContentScript({
     const patterns = settings.siteRegexPatterns || [];
     if (patterns.length > 0) {
       const url = window.location.href;
-      const matches = patterns.some(p => {
-        try { return new RegExp(p).test(url); } catch { return false; }
+      const matches = patterns.some((p) => {
+        try {
+          return new RegExp(p).test(url);
+        } catch {
+          return false;
+        }
       });
       if (!matches) return;
     }

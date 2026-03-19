@@ -36,9 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
             <div className="text-center">
               <div className="text-red-500 text-5xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Something went wrong
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
               <p className="text-gray-600 mb-6">
                 The extension encountered an unexpected error. Please try refreshing the page.
               </p>
@@ -52,10 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 </details>
               )}
-              <Button
-                fullWidth
-                onClick={() => window.location.reload()}
-              >
+              <Button fullWidth onClick={() => window.location.reload()}>
                 Refresh Page
               </Button>
             </div>

@@ -13,7 +13,8 @@ export function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseClasses = 'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses =
+    'px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses = {
     primary: 'bg-blue-600 text-white hover:bg-blue-700',

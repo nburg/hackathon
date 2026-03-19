@@ -26,9 +26,7 @@ export default function App() {
       <div className="w-80 p-4 space-y-3">
         <div className="text-center">
           <div className="text-red-500 text-3xl mb-2">⚠️</div>
-          <p className="text-sm text-gray-600 mb-3">
-            {settingsError || vocabError}
-          </p>
+          <p className="text-sm text-gray-600 mb-3">{settingsError || vocabError}</p>
           <Button fullWidth size="small" onClick={() => window.location.reload()}>
             Retry
           </Button>
@@ -57,10 +55,10 @@ export default function App() {
           <p className="text-xs text-gray-500">Learn Spanish passively!</p>
         </div>
         <div className={`flex items-center gap-2`}>
-          <span className="text-xs text-gray-500">
-            {settings.isEnabled ? 'Active' : 'Paused'}
-          </span>
-          <div className={`w-3 h-3 rounded-full ${settings.isEnabled ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <span className="text-xs text-gray-500">{settings.isEnabled ? 'Active' : 'Paused'}</span>
+          <div
+            className={`w-3 h-3 rounded-full ${settings.isEnabled ? 'bg-green-500' : 'bg-red-500'}`}
+          ></div>
         </div>
       </div>
 

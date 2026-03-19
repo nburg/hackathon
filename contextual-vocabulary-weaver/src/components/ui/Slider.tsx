@@ -32,9 +32,7 @@ export function Slider({
         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
         {...props}
       />
-      {helperText && (
-        <p className="text-xs text-gray-500">{helperText}</p>
-      )}
+      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
     </div>
   );
 }

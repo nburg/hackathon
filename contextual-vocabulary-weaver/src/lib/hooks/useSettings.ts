@@ -10,11 +10,11 @@ export function useSettings() {
   useEffect(() => {
     // Initial load
     getSettings()
-      .then(data => {
+      .then((data) => {
         setSettings(data);
         setError(null);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to load settings:', err);
         setError('Failed to load settings. Please refresh the page.');
       })
@@ -23,7 +23,10 @@ export function useSettings() {
       });
 
     // Listen for changes
-    const listener = (changes: any, areaName: string) => {
+    const listener = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string
+    ) => {
       if (areaName === 'sync' && changes[StorageKeys.SETTINGS]) {
         setSettings(changes[StorageKeys.SETTINGS].newValue);
       }

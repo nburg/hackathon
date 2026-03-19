@@ -9,13 +9,11 @@ export function WordCard({ word }: WordCardProps) {
   const now = new Date();
   const daysAgo = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  const lastSeenText = daysAgo === 0 ? 'Today' :
-                       daysAgo === 1 ? 'Yesterday' :
-                       `${daysAgo} days ago`;
+  const lastSeenText =
+    daysAgo === 0 ? 'Today' : daysAgo === 1 ? 'Yesterday' : `${daysAgo} days ago`;
 
-  const confidenceColor = word.pKnown > 0.7 ? 'text-green-600' :
-                         word.pKnown > 0.4 ? 'text-yellow-600' :
-                         'text-red-600';
+  const confidenceColor =
+    word.pKnown > 0.7 ? 'text-green-600' : word.pKnown > 0.4 ? 'text-yellow-600' : 'text-red-600';
 
   return (
     <div className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">

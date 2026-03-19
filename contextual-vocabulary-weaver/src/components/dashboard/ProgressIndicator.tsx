@@ -10,7 +10,9 @@ export function ProgressIndicator({ current, total }: ProgressIndicatorProps) {
     <div className="space-y-2">
       <div className="flex justify-between text-sm text-gray-600">
         <span>Words Mastered</span>
-        <span>{current} / {total}</span>
+        <span>
+          {current} / {total}
+        </span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-4">
         <div
