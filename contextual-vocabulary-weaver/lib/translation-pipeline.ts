@@ -26,7 +26,22 @@ interface Translator {
 
 /** Fallback translator using the free MyMemory API (no key required). */
 class MyMemoryTranslator implements Translator {
-  async translate(text: string): Promise<string> {
+  // Serialize all requests through a promise chain so we never fire concurrent
+  // calls — the free MyMemory tier returns 429 when hammered in parallel.
+  private queue: Promise<void> = Promise.resolve();
+  // 300 ms between requests keeps us well under the free-tier rate limit.
+  private static readonly DELAY_MS = 300;
+
+  translate(text: string): Promise<string> {
+    const result = this.queue.then(() => this._fetch(text));
+    // Advance the queue: wait for this request, then pause before the next one.
+    this.queue = result
+      .then(() => new Promise<void>(r => setTimeout(r, MyMemoryTranslator.DELAY_MS)))
+      .catch(() => new Promise<void>(r => setTimeout(r, MyMemoryTranslator.DELAY_MS)));
+    return result;
+  }
+
+  private async _fetch(text: string): Promise<string> {
     const url =
       `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|es`;
     const res = await fetch(url);
@@ -55,6 +70,8 @@ const TARGET_LANG = 'es';
 export class TranslationPipeline {
   private translator: Translator | null = null;
   private phase2Active = false;
+  // Cache query → translation so the same sentence/phrase is never sent twice.
+  private readonly cache = new Map<string, string>();
 
   /**
    * Checks API availability and warms up the translator.
@@ -218,14 +235,21 @@ export class TranslationPipeline {
     }
 
     try {
-      const translated = await this.translator!.translate(query);
+      const cached = this.cache.get(query);
+      const translated = cached ?? await this.translator!.translate(query);
+      if (!cached) this.cache.set(query, translated);
       const match = translated.match(/\[\[(.+?)\]\]/);
       if (match?.[1]) return match[1].trim();
     } catch {
       // fall through to bare-word fallback
     }
 
-    return this.translator!.translate(candidate.word);
+    const wordQuery = candidate.word;
+    const cachedWord = this.cache.get(wordQuery);
+    if (cachedWord) return cachedWord;
+    const wordTranslation = await this.translator!.translate(wordQuery);
+    this.cache.set(wordQuery, wordTranslation);
+    return wordTranslation;
   }
 
   private async translateGroup(candidates: WordCandidate[]): Promise<void> {
