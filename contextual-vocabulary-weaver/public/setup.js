@@ -126,24 +126,9 @@ async function runChecks() {
   }
 
   if (availability === 'downloadable') {
-    // availability() can lag behind the internals page installer.
-    // Try create() anyway — if the model is actually present it will succeed.
-    try {
-      const createFn = detected.shape === 'legacy'
-        ? () => detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: 'es' })
-        : () => detected.api.create({ sourceLanguage: 'en', targetLanguage: 'es' });
-      const t      = await createFn();
-      const result = await t.translate('Hello');
-      setStep('model', 'ok', `Model ready (availability lag) — test: "Hello" → "${result}" ✓`);
-      showSuccess();
-      return;
-    } catch (_) {
-      // Model genuinely not present — show install instructions.
-    }
-    progressWrap.style.display = '';
-    progressBar.className = 'progress-bar indeterminate';
-    setStep('model', 'active',
-      'Model not yet downloaded. Open chrome://on-device-translation-internals, find en → es, and click Install. Then restart Chrome.');
+    progressWrap.style.display = 'none';
+    setStep('model', 'active', 'Model not downloaded yet. Click the button below to start the download.');
+    document.getElementById('download-btn-wrap').style.display = '';
     return;
   }
 
@@ -171,6 +156,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', () => copyText(btn.dataset.target, btn));
+  });
+
+  // Download button — must be triggered by a user gesture so Chrome allows
+  // create() to initiate the model download.
+  document.getElementById('download-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('download-btn');
+    btn.disabled = true;
+    btn.textContent = 'Downloading…';
+
+    const detected = detectAPI();
+    if (!detected) return;
+    try {
+      const createFn = detected.shape === 'legacy'
+        ? () => detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: 'es' })
+        : () => detected.api.create({ sourceLanguage: 'en', targetLanguage: 'es' });
+      await createFn();
+      // Download kicked off — polling loop will detect when it becomes available.
+    } catch (e) {
+      setStep('model', 'error', 'Download failed: ' + e);
+      btn.disabled = false;
+      btn.textContent = 'Try again';
+    }
   });
 
   runChecks();

@@ -120,6 +120,14 @@
       animation: blink 1.5s ease-in-out infinite;
     }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+    #download-btn {
+      background: #2563eb; color: #fff; border: none; border-radius: 6px;
+      padding: 0.55rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    #download-btn:hover:not(:disabled) { background: #1d4ed8; }
+    #download-btn:disabled { background: #1e3a5f; color: #60a5fa; cursor: default; }
   </style>
 </head>
 <body>
@@ -196,6 +204,9 @@
         <strong style="color:#f8fafc">Install</strong> if it isn't downloading already.
       </div>
       <div class="status-bar checking" id="status-model" style="display:none">Checking…</div>
+      <div id="download-btn-wrap" style="display:none; margin-top:0.8rem">
+        <button id="download-btn">Download Model</button>
+      </div>
       <div class="progress-wrap" id="progress-wrap" style="display:none">
         <div class="progress-bar indeterminate" id="progress-bar"></div>
       </div>

@@ -110,14 +110,18 @@ export class TranslationPipeline {
         const availability = await Translator.availability({
           sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
         });
-        if (availability !== 'unavailable') {
-          // Try create() even for 'downloadable' — the internals page may have
-          // installed the model without availability() reflecting it yet.
+        if (availability === 'available') {
           this.translator = await Translator.create({
             sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
           });
-          console.log(`[CVW] Using window.Translator (Chrome 138+, availability: ${availability}).`);
+          console.log('[CVW] Using window.Translator (Chrome 138+).');
           return true;
+        }
+        if (availability !== 'unavailable') {
+          // 'downloadable'/'downloading': create() requires a user gesture in
+          // this state — can't trigger silently from a content script.
+          console.warn(`[CVW] Translator model not ready (${availability}). Open the extension setup page to download it.`);
+          return false;
         }
       } catch (e) {
         console.warn('[CVW] window.Translator failed:', e);
@@ -130,12 +134,16 @@ export class TranslationPipeline {
         const availability = await window.ai.translator.availability({
           sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
         });
-        if (availability !== 'unavailable') {
+        if (availability === 'available') {
           this.translator = await window.ai.translator.create({
             sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
           });
           console.log('[CVW] Using window.ai.translator (Chrome 131–137).');
           return true;
+        }
+        if (availability !== 'unavailable') {
+          console.warn(`[CVW] ai.translator model not ready (${availability}). Open the extension setup page to download it.`);
+          return false;
         }
       } catch (e) {
         console.warn('[CVW] window.ai.translator failed:', e);
