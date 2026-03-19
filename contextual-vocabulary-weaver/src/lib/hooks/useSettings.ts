@@ -5,13 +5,22 @@ import type { Settings } from '@/types';
 export function useSettings() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initial load
-    getSettings().then(data => {
-      setSettings(data);
-      setLoading(false);
-    });
+    getSettings()
+      .then(data => {
+        setSettings(data);
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to load settings:', err);
+        setError('Failed to load settings. Please refresh the page.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     // Listen for changes
     const listener = (changes: any, areaName: string) => {
@@ -25,9 +34,16 @@ export function useSettings() {
   }, []);
 
   const updateSettings = async (updates: Partial<Settings>) => {
-    await saveSettings(updates);
-    // State will update via listener
+    try {
+      await saveSettings(updates);
+      setError(null);
+      // State will update via listener
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      setError('Failed to save settings. Please try again.');
+      throw err; // Re-throw so caller can handle
+    }
   };
 
-  return { settings, loading, updateSettings };
+  return { settings, loading, error, updateSettings };
 }

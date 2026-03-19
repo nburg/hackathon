@@ -3,18 +3,55 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
 import { Toggle } from '@/components/ui/Toggle';
+import { LoadingScreen } from '@/components/ui/Spinner';
 import { useSettings } from '@/lib/hooks/useSettings';
 
 export default function App() {
-  const { settings, loading, updateSettings } = useSettings();
+  const { settings, loading, error, updateSettings } = useSettings();
   const [newPattern, setNewPattern] = useState('');
   const [patternError, setPatternError] = useState('');
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  if (loading || !settings) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <p>Loading settings...</p>
-    </div>;
+  if (loading) {
+    return <LoadingScreen message="Loading settings..." />;
   }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <div className="text-center">
+            <div className="text-red-500 text-5xl mb-4">❌</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Settings</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button fullWidth onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!settings) {
+    return <LoadingScreen message="Initializing..." />;
+  }
+
+  const handleUpdate = async (updates: any) => {
+    setSaving(true);
+    setSaveMessage(null);
+    try {
+      await updateSettings(updates);
+      setSaveMessage('✓ Saved successfully');
+      setTimeout(() => setSaveMessage(null), 2000);
+    } catch (err) {
+      setSaveMessage('❌ Failed to save');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const addPattern = () => {
     const trimmed = newPattern.trim();
@@ -50,18 +87,28 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Contextual Vocabulary Weaver - Settings
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Contextual Vocabulary Weaver - Settings
+          </h1>
+          {saveMessage && (
+            <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              saveMessage.includes('✓') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {saveMessage}
+            </div>
+          )}
+        </div>
 
         <div className="space-y-6">
           {/* Global Toggle */}
           <Card title="Extension Status">
             <Toggle
               enabled={settings.isEnabled}
-              onChange={(enabled) => updateSettings({ isEnabled: enabled })}
+              onChange={(enabled) => handleUpdate({ isEnabled: enabled })}
               label="Enable vocabulary replacement"
             />
+            {saving && <p className="text-sm text-gray-500 mt-2">Saving...</p>}
           </Card>
 
           {/* Language Selection */}
@@ -90,10 +137,11 @@ export default function App() {
             <Slider
               label={`Replacement Rate (${getDensityLabel(settings.density)})`}
               value={settings.density}
-              onValueChange={(value) => updateSettings({ density: value })}
+              onValueChange={(value) => handleUpdate({ density: value })}
               min={1}
               max={10}
               helperText="1% = Few words for beginners | 10% = Many words for advanced learners"
+              disabled={saving}
             />
           </Card>
 
@@ -136,11 +184,11 @@ export default function App() {
             )}
           </Card>
 
-          {/* Save Button (optional - settings auto-save) */}
-          <div className="flex justify-end">
-            <Button variant="primary" onClick={() => alert('Settings saved automatically!')}>
-              Settings Auto-Saved ✓
-            </Button>
+          {/* Info Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800">
+              💡 <strong>Auto-save enabled:</strong> Your settings are saved automatically as you change them.
+            </p>
           </div>
         </div>
       </div>

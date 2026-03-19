@@ -9,18 +9,28 @@ export function useVocabulary() {
     wordsKnown: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initial load
-    getVocabulary().then(data => {
-      setVocabulary(data);
-      setLoading(false);
-    });
+    getVocabulary()
+      .then(data => {
+        setVocabulary(data);
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to load vocabulary:', err);
+        setError('Failed to load vocabulary data. Please refresh the page.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     // Listen for changes (P5 will update this)
     const listener = (changes: any, areaName: string) => {
       if (areaName === 'local' && changes[StorageKeys.VOCABULARY]) {
-        setVocabulary(changes[StorageKeys.VOCABULARY].newValue);
+        // Transform the data properly when it updates
+        getVocabulary().then(setVocabulary).catch(console.error);
       }
     };
     chrome.storage.onChanged.addListener(listener);
@@ -28,5 +38,5 @@ export function useVocabulary() {
     return () => chrome.storage.onChanged.removeListener(listener);
   }, []);
 
-  return { vocabulary, loading };
+  return { vocabulary, loading, error };
 }
