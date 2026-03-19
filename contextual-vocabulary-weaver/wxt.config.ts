@@ -30,6 +30,11 @@ export default defineConfig({
     version: '0.1.0',
     permissions: ['storage', 'activeTab', 'scripting', 'tabs'],
     host_permissions: ['<all_urls>'],
-    action: {}
+    action: {},
+    browser_specific_settings: {
+      gecko: {
+        id: 'cvw@hackathon.dev',
+      },
+    },
   }
 });
