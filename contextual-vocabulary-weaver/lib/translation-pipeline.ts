@@ -24,18 +24,6 @@ interface Translator {
   translate(text: string): Promise<string>;
 }
 
-/** Fallback translator using the free MyMemory API (no key required). */
-class MyMemoryTranslator implements Translator {
-  async translate(text: string): Promise<string> {
-    const url =
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|es`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`);
-    const json = await res.json() as { responseData: { translatedText: string } };
-    return json.responseData.translatedText;
-  }
-}
-
 interface SentenceCandidate {
   sentence: string;
   node: Text;
@@ -61,27 +49,27 @@ export class TranslationPipeline {
    * Returns false if the API is not supported in this browser.
    */
   async init(): Promise<boolean> {
-    // Try Chrome's built-in Translation API first.
-    if (window.translation) {
-      const availability = await window.translation.canTranslate({
-        sourceLanguage: SOURCE_LANG,
-        targetLanguage: TARGET_LANG,
-      });
-
-      if (availability !== 'no') {
-        // 'after-download': model downloads on first translate() call — acceptable.
-        this.translator = await window.translation.createTranslator({
-          sourceLanguage: SOURCE_LANG,
-          targetLanguage: TARGET_LANG,
-        });
-        console.log('[CVW] Using Chrome built-in Translation API.');
-        return true;
-      }
+    if (!window.translation) {
+      console.warn('[CVW] Chrome Translation API unavailable — extension disabled.');
+      return false;
     }
 
-    // Fallback: free MyMemory API — works in any browser, no key needed.
-    console.warn('[CVW] Chrome Translation API unavailable — falling back to MyMemory API.');
-    this.translator = new MyMemoryTranslator();
+    const availability = await window.translation.canTranslate({
+      sourceLanguage: SOURCE_LANG,
+      targetLanguage: TARGET_LANG,
+    });
+
+    if (availability === 'no') {
+      console.warn('[CVW] en→es translation not supported on this device.');
+      return false;
+    }
+
+    // 'after-download': model downloads on first translate() call — acceptable.
+    this.translator = await window.translation.createTranslator({
+      sourceLanguage: SOURCE_LANG,
+      targetLanguage: TARGET_LANG,
+    });
+
     return true;
   }
 
