@@ -30,17 +30,18 @@ export default defineContentScript({
     const ready = await pipeline.init();
     if (!ready) return;
 
-    // ✅ P5 Integration: Wire in word priority from SRS engine
-    // This function returns 0.0-1.0 score (higher = more important to show)
-    const getPriority = async (word: string): Promise<number> => {
-      return await getWordPriority(word);
-    };
+    // ✅ P5 Integration: Apply phase from storage at startup
+    // (P5 sets currentPhase: 2 when BKT threshold is reached)
+    if (settings.currentPhase === 2) {
+      pipeline.activatePhase2();
+    }
 
-    // ✅ P5 Integration: Register Phase 2 BKT trigger
-    // When user knows 70% of top 200 Spanish words, switch to sentence mode
-    pipeline.onPhase2Trigger(async () => {
-      const triggered = await checkAndTriggerPhase2();
-      if (triggered) {
+    // ✅ P5 Integration: Listen for P5 flipping currentPhase to 2 mid-session
+    browser.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local') return;
+      const updated = changes[STORAGE_KEYS.SETTINGS]?.newValue as ExtensionSettings | undefined;
+      if (updated?.currentPhase === 2) {
+        pipeline.activatePhase2();
         console.log('🎉 [CVW] Phase 2 activated! Switching to sentence-level translation.');
       }
     });
@@ -53,7 +54,7 @@ export default defineContentScript({
     });
 
     // Run translation pipeline with P5's priority scoring
-    await pipeline.run(settings.density, getPriority);
+    await pipeline.run(settings.density);
 
     console.log('[CVW] Translation pipeline completed');
   },
