@@ -14,16 +14,6 @@ declare global {
     };
   }
 
-  // Firefox 118+ WebExtension translations API (not yet in community types)
-  const browser: typeof browser & {
-    translations?: {
-      translateText(options: {
-        text: string;
-        fromLanguage: string;
-        toLanguage: string;
-      }): Promise<{ translatedText: string }>;
-    };
-  };
 }
 
 interface TranslatorOptions {
@@ -33,18 +23,6 @@ interface TranslatorOptions {
 
 interface Translator {
   translate(text: string): Promise<string>;
-}
-
-/** Firefox 118+ built-in on-device translator via the WebExtension translations API. */
-class FirefoxTranslator implements Translator {
-  async translate(text: string): Promise<string> {
-    const result = await browser.translations!.translateText({
-      text,
-      fromLanguage: SOURCE_LANG,
-      toLanguage: TARGET_LANG,
-    });
-    return result.translatedText;
-  }
 }
 
 interface SentenceCandidate {
@@ -92,14 +70,7 @@ export class TranslationPipeline {
       }
     }
 
-    // Try Firefox's built-in on-device translations API.
-    if (browser.translations) {
-      console.log('[CVW] Using Firefox built-in Translation API.');
-      this.translator = new FirefoxTranslator();
-      return true;
-    }
-
-    console.warn('[CVW] No built-in translation API available — extension disabled.');
+    console.warn('[CVW] Chrome built-in Translation API unavailable — extension disabled.');
     return false;
   }
 
