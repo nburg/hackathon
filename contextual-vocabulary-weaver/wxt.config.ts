@@ -1,8 +1,7 @@
 import { defineConfig } from 'wxt';
 
 export default defineConfig({
-  srcDir: 'src',
-  manifest: {
+manifest: {
     name: 'Contextual Vocabulary Weaver',
     version: '0.1.0',
     permissions: ['storage', 'activeTab', 'scripting'],
