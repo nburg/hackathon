@@ -43,7 +43,6 @@ const TARGET_LANG = 'es';
 export class TranslationPipeline {
   private translator: Translator | null = null;
   private phase2Active = false;
-  private phase2Callback: (() => void) | null = null;
 
   /**
    * Checks API availability and warms up the translator.
@@ -74,21 +73,9 @@ export class TranslationPipeline {
     return true;
   }
 
-  /**
-   * Register the Phase 2 trigger callback (called by P5's BKT engine when
-   * P(Known) >= 0.85 for enough of the top-200 Spanish words).
-   * Once fired, subsequent `run()` calls enter sentence-level mode.
-   */
-  onPhase2Trigger(callback: () => void): void {
-    this.phase2Callback = callback;
-  }
-
   /** Signal from P5 that Phase 2 should activate. */
   activatePhase2(): void {
-    if (!this.phase2Active) {
-      this.phase2Active = true;
-      this.phase2Callback?.();
-    }
+    this.phase2Active = true;
   }
 
   /**

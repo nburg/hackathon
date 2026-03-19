@@ -5,12 +5,6 @@ import {
   DEFAULT_SETTINGS,
   type ExtensionSettings
 } from '../lib/types';
-import {
-  getWordPriority,
-  checkAndTriggerPhase2,
-  trackExposure,
-  trackRecallFailure
-} from '../lib';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -37,23 +31,19 @@ export default defineContentScript({
     }
 
     // ✅ P5 Integration: Listen for P5 flipping currentPhase to 2 mid-session
+    // and re-run immediately so the current page switches without a reload.
     browser.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       const updated = changes[STORAGE_KEYS.SETTINGS]?.newValue as ExtensionSettings | undefined;
       if (updated?.currentPhase === 2) {
         pipeline.activatePhase2();
         console.log('🎉 [CVW] Phase 2 activated! Switching to sentence-level translation.');
+        pipeline.run(updated.density);
       }
     });
 
-    // ✅ P5 Integration: Pass tracking callbacks to pipeline
-    // These are called when words are displayed and when user hovers
-    pipeline.setTrackingCallbacks({
-      onExposure: trackExposure,
-      onRecallFailure: trackRecallFailure
-    });
-
-    // Run translation pipeline with P5's priority scoring
+    // Run translation pipeline with density from P2's settings.
+    // Tracking (exposure + recall) is handled inside the pipeline via P5's storage API.
     await pipeline.run(settings.density);
 
     console.log('[CVW] Translation pipeline completed');
