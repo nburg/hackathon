@@ -1,4 +1,4 @@
-import type { WordCandidate } from '../../P3/src/types';
+import type { WordCandidate } from '@p3/types';
 
 /**
  * Mock data for P4 development and testing — kept as a test fixture even

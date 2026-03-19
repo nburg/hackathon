@@ -1,5 +1,5 @@
-import { extractCandidates, filterCandidates, getSentenceForCandidate } from '../../P3/src/index';
-import type { WordCandidate } from '../../P3/src/types';
+import { extractCandidates, filterCandidates, getSentenceForCandidate } from '@p3/index';
+import type { WordCandidate } from '@p3/types';
 import { getWordPriority, trackExposure, trackRecallFailure } from './index';
 
 // ---------------------------------------------------------------------------
