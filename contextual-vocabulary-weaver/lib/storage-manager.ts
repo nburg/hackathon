@@ -112,8 +112,9 @@ export async function getAllWordStats(): Promise<Record<string, WordStats>> {
  *   VALUES (?, 1, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0.0);
  *
  * @param word - The word that was displayed to the user
+ * @param translation - The translated word shown to the user (stored on first exposure)
  */
-export async function trackExposure(word: string): Promise<void> {
+export async function trackExposure(word: string, translation?: string): Promise<void> {
   // Read current state (SELECT)
   const allStats = await getAllWordStats();
 
@@ -128,11 +129,16 @@ export async function trackExposure(word: string): Promise<void> {
       existingStats.exposureCount,
       existingStats.recallFailures
     );
+    // Store translation if we now have one and didn't before
+    if (translation && !existingStats.translation) {
+      existingStats.translation = translation;
+    }
     allStats[word] = existingStats;
   } else {
     // INSERT case: New word
     const newStats: WordStats = {
       word,
+      translation,
       exposureCount: 1,
       recallFailures: 0,
       firstSeen: Date.now(),

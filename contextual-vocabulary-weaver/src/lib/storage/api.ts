@@ -33,7 +33,7 @@ function transformWordStats(wordStats: Record<string, WordStats>): VocabularyDat
       key,
       {
         word: s.word,
-        translation: '', // P5 doesn't store the translation; shown blank in dashboard
+        translation: s.translation ?? '',
         exposureCount: s.exposureCount,
         lastSeen: s.lastSeen,
         recallFailures: s.recallFailures,

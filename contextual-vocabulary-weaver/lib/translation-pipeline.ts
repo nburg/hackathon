@@ -223,7 +223,7 @@ export class TranslationPipeline {
         if (translated.toLowerCase() === candidate.word.toLowerCase()) continue;
         replaceInDom(candidate, translated);
         // Fire-and-forget: tell P5 this word was exposed on the page.
-        trackExposure(candidate.word).catch(() => {});
+        trackExposure(candidate.word, translated).catch(() => {});
       } catch (err) {
         console.error(`[CVW] Translation failed for "${candidate.word}":`, err);
       }

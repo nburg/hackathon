@@ -15,6 +15,9 @@ export interface WordStats {
   /** The word being tracked (Primary Key) */
   word: string;
 
+  /** The translated word in the target language (stored on first exposure) */
+  translation?: string;
+
   /** How many times user has been exposed to this word (Counter column, auto-increments) */
   exposureCount: number;
 
