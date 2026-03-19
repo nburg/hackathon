@@ -3,6 +3,7 @@ export interface Settings {
   density: number; // 1-10 (percentage)
   enabledSites: string[]; // Array of domains where extension is enabled
   isEnabled: boolean; // Global toggle
+  siteRegexPatterns: string[]; // Regex patterns — if non-empty, only matching URLs are altered
 }
 
 export interface VocabularyWord {

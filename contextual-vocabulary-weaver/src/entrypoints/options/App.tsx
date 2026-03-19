@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
@@ -6,12 +7,38 @@ import { useSettings } from '@/lib/hooks/useSettings';
 
 export default function App() {
   const { settings, loading, updateSettings } = useSettings();
+  const [newPattern, setNewPattern] = useState('');
+  const [patternError, setPatternError] = useState('');
 
   if (loading || !settings) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <p>Loading settings...</p>
     </div>;
   }
+
+  const addPattern = () => {
+    const trimmed = newPattern.trim();
+    if (!trimmed) return;
+    try {
+      new RegExp(trimmed);
+    } catch {
+      setPatternError('Invalid regex pattern');
+      return;
+    }
+    const current = settings!.siteRegexPatterns || [];
+    if (current.includes(trimmed)) {
+      setPatternError('Pattern already exists');
+      return;
+    }
+    updateSettings({ siteRegexPatterns: [...current, trimmed] });
+    setNewPattern('');
+    setPatternError('');
+  };
+
+  const removePattern = (pattern: string) => {
+    const current = settings!.siteRegexPatterns || [];
+    updateSettings({ siteRegexPatterns: current.filter(p => p !== pattern) });
+  };
 
   const densityLabels = ['Beginner', 'Intermediate', 'Aggressive'];
   const getDensityLabel = (val: number) => {
@@ -68,6 +95,45 @@ export default function App() {
               max={10}
               helperText="1% = Few words for beginners | 10% = Many words for advanced learners"
             />
+          </Card>
+
+          {/* Site Filter (Regex Patterns) */}
+          <Card title="Site Filter (Regex Patterns)">
+            <p className="text-sm text-gray-600 mb-3">
+              If any patterns are added, only URLs matching at least one will be altered.
+              Leave empty to apply to all sites.
+            </p>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={newPattern}
+                onChange={(e) => { setNewPattern(e.target.value); setPatternError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && addPattern()}
+                placeholder="e.g. .*\.wikipedia\.org.*"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Button variant="primary" onClick={addPattern}>Add</Button>
+            </div>
+            {patternError && (
+              <p className="text-xs text-red-500 mb-2">{patternError}</p>
+            )}
+            {(settings.siteRegexPatterns || []).length === 0 ? (
+              <p className="text-xs text-gray-400 italic">No patterns — extension runs on all sites.</p>
+            ) : (
+              <ul className="space-y-1">
+                {settings.siteRegexPatterns.map((pattern) => (
+                  <li key={pattern} className="flex items-center justify-between bg-gray-100 rounded px-3 py-1.5">
+                    <code className="text-sm text-gray-800 break-all">{pattern}</code>
+                    <button
+                      onClick={() => removePattern(pattern)}
+                      className="ml-3 text-red-500 hover:text-red-700 text-xs font-medium shrink-0"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
 
           {/* Save Button (optional - settings auto-save) */}

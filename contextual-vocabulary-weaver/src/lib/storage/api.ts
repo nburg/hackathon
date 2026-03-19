@@ -32,5 +32,6 @@ function getDefaultSettings(): Settings {
     density: 5, // 5% default
     enabledSites: [],
     isEnabled: true,
+    siteRegexPatterns: [],
   };
 }
