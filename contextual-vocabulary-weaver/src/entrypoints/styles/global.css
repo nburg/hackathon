@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom layer for content script styles */
+@layer utilities {
+  .word-replaced {
+    @apply underline decoration-dashed decoration-blue-500 decoration-2 cursor-help;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .word-replaced:hover {
+    @apply bg-blue-50 decoration-blue-600;
+  }
+}

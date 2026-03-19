@@ -1,12 +1,14 @@
 import { defineConfig } from 'wxt';
+import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
 import path from 'path';
 
 const __dir = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
-  srcDir: '.',
+  srcDir: 'src',
   vite: () => ({
+    plugins: [react()],
     resolve: {
       alias: {
         // Map @p3 to P3's source so Vite bundles it directly.
