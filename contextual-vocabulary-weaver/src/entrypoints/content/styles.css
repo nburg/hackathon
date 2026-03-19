@@ -54,3 +54,60 @@
     background-color: rgba(96, 165, 250, 0.15);
   }
 }
+
+/* ── P4 pipeline spans ─────────────────────────────────────────────────────── */
+
+/* Phase 1: individual replaced words */
+.cvw-word {
+  border-bottom: 2px dashed #4CAF50;
+  color: #2e7d32;
+  cursor: help;
+  padding: 0 2px;
+  display: inline;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.cvw-word:hover {
+  background-color: #e8f5e9;
+  border-bottom-color: #1b5e20;
+  color: #1b5e20;
+}
+
+/* Phase 2: full translated sentences */
+.cvw-sentence {
+  border-bottom: 2px solid #3b82f6;
+  color: #1d4ed8;
+  cursor: help;
+  display: inline;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.cvw-sentence:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e3a8a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cvw-word {
+    border-bottom-color: #81c784;
+    color: #a5d6a7;
+  }
+  .cvw-word:hover {
+    background-color: rgba(129, 199, 132, 0.2);
+    color: #c8e6c9;
+  }
+  .cvw-sentence {
+    border-bottom-color: #60a5fa;
+    color: #93c5fd;
+  }
+  .cvw-sentence:hover {
+    background-color: rgba(96, 165, 250, 0.15);
+    color: #bfdbfe;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cvw-word, .cvw-sentence {
+    transition: none;
+  }
+}

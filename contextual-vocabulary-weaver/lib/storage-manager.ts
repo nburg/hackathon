@@ -34,7 +34,7 @@ import {
  */
 export async function getSettings(): Promise<ExtensionSettings> {
   const data = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
-  return data.settings || DEFAULT_SETTINGS;
+  return (data.settings as ExtensionSettings) || DEFAULT_SETTINGS;
 }
 
 /**
@@ -77,7 +77,7 @@ export async function updateSettings(
  */
 export async function getWordStats(word: string): Promise<WordStats | null> {
   const data = await chrome.storage.local.get(STORAGE_KEYS.WORD_STATS);
-  const allStats: Record<string, WordStats> = data.word_stats || {};
+  const allStats = (data.word_stats as Record<string, WordStats>) || {};
   return allStats[word] || null;
 }
 
@@ -91,7 +91,7 @@ export async function getWordStats(word: string): Promise<WordStats | null> {
  */
 export async function getAllWordStats(): Promise<Record<string, WordStats>> {
   const data = await chrome.storage.local.get(STORAGE_KEYS.WORD_STATS);
-  return data.word_stats || {};
+  return (data.word_stats as Record<string, WordStats>) || {};
 }
 
 /**
