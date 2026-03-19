@@ -25,16 +25,19 @@ export default defineConfig({
   runner: {
     startUrls: ['https://en.wikipedia.org/wiki/Wikipedia'],
   },
-  manifest: {
+  manifest: ({ browser }) => ({
     name: 'Contextual Vocabulary Weaver',
     version: '0.1.0',
-    permissions: ['storage', 'activeTab', 'scripting', 'tabs'],
+    permissions: [
+      'storage', 'activeTab', 'scripting', 'tabs',
+      ...(browser === 'firefox' ? ['translations'] : []),
+    ],
     host_permissions: ['<all_urls>'],
     action: {},
-    browser_specific_settings: {
-      gecko: {
-        id: 'cvw@hackathon.dev',
+    ...(browser === 'firefox' && {
+      browser_specific_settings: {
+        gecko: { id: 'cvw@hackathon.dev' },
       },
-    },
-  }
+    }),
+  })
 });

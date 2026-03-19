@@ -13,6 +13,17 @@ declare global {
       createTranslator(options: TranslatorOptions): Promise<Translator>;
     };
   }
+
+  // Firefox 118+ WebExtension translations API (not yet in community types)
+  const browser: typeof browser & {
+    translations?: {
+      translateText(options: {
+        text: string;
+        fromLanguage: string;
+        toLanguage: string;
+      }): Promise<{ translatedText: string }>;
+    };
+  };
 }
 
 interface TranslatorOptions {
@@ -24,7 +35,19 @@ interface Translator {
   translate(text: string): Promise<string>;
 }
 
-/** Fallback translator using the free MyMemory API (no key required). */
+/** Firefox 118+ built-in on-device translator via the WebExtension translations API. */
+class FirefoxTranslator implements Translator {
+  async translate(text: string): Promise<string> {
+    const result = await browser.translations!.translateText({
+      text,
+      fromLanguage: SOURCE_LANG,
+      toLanguage: TARGET_LANG,
+    });
+    return result.translatedText;
+  }
+}
+
+/** Last-resort fallback using the free MyMemory API (no key required). */
 class MyMemoryTranslator implements Translator {
   async translate(text: string): Promise<string> {
     const url =
@@ -79,8 +102,15 @@ export class TranslationPipeline {
       }
     }
 
-    // Fallback: free MyMemory API — works in any browser, no key needed.
-    console.warn('[CVW] Chrome Translation API unavailable — falling back to MyMemory API.');
+    // Try Firefox's built-in on-device translations API.
+    if (browser.translations) {
+      console.log('[CVW] Using Firefox built-in Translation API.');
+      this.translator = new FirefoxTranslator();
+      return true;
+    }
+
+    // Last resort: free MyMemory API — works in any browser, no key needed.
+    console.warn('[CVW] No built-in translation API found — falling back to MyMemory API.');
     this.translator = new MyMemoryTranslator();
     return true;
   }
