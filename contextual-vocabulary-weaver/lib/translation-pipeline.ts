@@ -24,6 +24,15 @@ interface Translator {
   translate(text: string): Promise<string>;
 }
 
+interface SentenceCandidate {
+  sentence: string;
+  node: Text;
+  /** Character offset of the sentence within `node.data`. */
+  offset: number;
+  /** All word candidates that fall within this sentence (used for SRS tracking). */
+  words: WordCandidate[];
+}
+
 // ---------------------------------------------------------------------------
 // TranslationPipeline
 // ---------------------------------------------------------------------------
@@ -127,12 +136,56 @@ export class TranslationPipeline {
   }
 
   private async runPhase2(densityFraction: number): Promise<void> {
-    // TODO(P4-Phase2): sentence-level replacement
-    // Use getSentenceForCandidate(candidate) from P3 to get the full sentence,
-    // then translate the whole sentence and replace the parent element's text.
-    console.log('[CVW] Phase 2 active — sentence pipeline not yet implemented.');
-    void densityFraction;
-    void getSentenceForCandidate;
+    const allCandidates = extractCandidates(document);
+
+    // Proper nouns are still skipped; multi-word flag is irrelevant at sentence level.
+    const eligible = filterCandidates(allCandidates, (c) => !c.isProperNoun);
+
+    // Group word candidates into sentence candidates using P3's getSentenceForCandidate.
+    const sentenceCandidates = buildSentenceCandidates(eligible);
+    if (sentenceCandidates.length === 0) return;
+
+    // Score each sentence by the highest-priority word it contains.
+    // A sentence with even one new/struggling word is worth showing.
+    const scores = await Promise.all(
+      sentenceCandidates.map(async (sc) => {
+        const wordScores = await Promise.all(sc.words.map((w) => getWordPriority(w.word)));
+        return Math.max(...wordScores);
+      }),
+    );
+
+    const ranked = sentenceCandidates
+      .map((sc, i) => ({ sc, score: scores[i] }))
+      .sort((a, b) => b.score - a.score);
+
+    const count = Math.max(1, Math.round(ranked.length * densityFraction));
+    const selected = ranked.slice(0, count).map(({ sc }) => sc);
+
+    // Group by text node; replace right-to-left within each node.
+    const byNode = new Map<Text, SentenceCandidate[]>();
+    for (const sc of selected) {
+      const group = byNode.get(sc.node) ?? [];
+      group.push(sc);
+      byNode.set(sc.node, group);
+    }
+
+    await Promise.all([...byNode.values()].map((group) => this.translateSentenceGroup(group)));
+  }
+
+  private async translateSentenceGroup(sentences: SentenceCandidate[]): Promise<void> {
+    // Descending offset so right-to-left replacement keeps offsets valid.
+    const sorted = [...sentences].sort((a, b) => b.offset - a.offset);
+
+    for (const sc of sorted) {
+      try {
+        const translated = await this.translator!.translate(sc.sentence);
+        replaceSentenceInDom(sc, translated);
+        // Track exposure for every word in the sentence.
+        sc.words.forEach((w) => trackExposure(w.word).catch(() => {}));
+      } catch (err) {
+        console.error('[CVW] Phase 2 translation failed:', err);
+      }
+    }
   }
 
   private async translateGroup(candidates: WordCandidate[]): Promise<void> {
@@ -191,6 +244,69 @@ function replaceInDom(candidate: WordCandidate, translation: string): void {
   parent.replaceChild(span, wordNode);
 
   void restNode; // already re-attached to the DOM by splitText
+}
+
+/**
+ * Groups word candidates into sentence candidates by (text node, sentence) pairs.
+ * Deduplicates so each unique sentence within a text node is processed once.
+ */
+function buildSentenceCandidates(candidates: WordCandidate[]): SentenceCandidate[] {
+  // Outer key: text node reference. Inner key: trimmed sentence string.
+  const map = new Map<Text, Map<string, SentenceCandidate>>();
+
+  for (const candidate of candidates) {
+    const sentence = getSentenceForCandidate(candidate);
+    if (!sentence) continue;
+
+    if (!map.has(candidate.node)) {
+      map.set(candidate.node, new Map());
+    }
+    const nodeMap = map.get(candidate.node)!;
+
+    if (!nodeMap.has(sentence)) {
+      const offset = candidate.node.data.indexOf(sentence);
+      if (offset === -1) continue;
+      nodeMap.set(sentence, { sentence, node: candidate.node, offset, words: [] });
+    }
+    nodeMap.get(sentence)!.words.push(candidate);
+  }
+
+  return [...map.values()].flatMap((nodeMap) => [...nodeMap.values()]);
+}
+
+/**
+ * Splits `sc.node` around the sentence and replaces it with a <span> that
+ * displays the translation and reverts to the original on hover.
+ *
+ * Before: [... sentence ...]  (single Text node)
+ * After:  [...before][<span class="cvw-sentence">translation</span>][after...]
+ */
+function replaceSentenceInDom(sc: SentenceCandidate, translation: string): void {
+  const { node, sentence, offset } = sc;
+  const parent = node.parentNode;
+  if (!parent) return;
+
+  const sentenceNode = node.splitText(offset);
+  const restNode = sentenceNode.splitText(sentence.length);
+
+  const span = createSentenceSpan(sentence, translation);
+  parent.replaceChild(span, sentenceNode);
+
+  void restNode; // already re-attached to the DOM by splitText
+}
+
+function createSentenceSpan(original: string, translation: string): HTMLSpanElement {
+  const span = document.createElement('span');
+  span.className = 'cvw-sentence';
+  span.dataset.original = original;
+  span.dataset.translation = translation;
+  span.textContent = translation;
+  span.title = original;
+
+  span.addEventListener('mouseenter', () => { span.textContent = original; });
+  span.addEventListener('mouseleave', () => { span.textContent = translation; });
+
+  return span;
 }
 
 function createWordSpan(original: string, translation: string): HTMLSpanElement {
