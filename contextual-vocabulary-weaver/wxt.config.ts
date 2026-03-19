@@ -28,7 +28,10 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: 'Contextual Vocabulary Weaver',
     version: '0.1.0',
-    permissions: ['storage', 'activeTab', 'scripting', 'tabs'],
+    permissions: [
+      'storage', 'activeTab', 'scripting', 'tabs',
+      ...(browser === 'firefox' ? ['translations'] : []),
+    ],
     host_permissions: ['<all_urls>'],
     action: {},
     ...(browser === 'firefox' && {
