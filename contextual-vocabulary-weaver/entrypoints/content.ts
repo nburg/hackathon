@@ -14,11 +14,23 @@ export default defineContentScript({
     const ready = await pipeline.init();
     if (!ready) return;
 
+    // Apply phase from storage at startup (P5 sets currentPhase: 2 when BKT
+    // threshold is reached — P(Known) >= 0.85 for enough top-200 words).
+    if (settings.currentPhase === 2) {
+      pipeline.activatePhase2();
+    }
+
+    // Listen for P5 flipping currentPhase to 2 mid-session.
+    browser.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local') return;
+      const updated = changes[STORAGE_KEYS.SETTINGS]?.newValue as ExtensionSettings | undefined;
+      if (updated?.currentPhase === 2) {
+        pipeline.activatePhase2();
+      }
+    });
+
     // TODO(P5): wire in getWordPriority() from the SRS engine
     // const getPriority = (word: string) => storageEngine.getWordPriority(word);
-
-    // TODO(P5): register the Phase 2 BKT trigger
-    // pipeline.onPhase2Trigger(() => { ... });
 
     await pipeline.run(settings.density);
   },
