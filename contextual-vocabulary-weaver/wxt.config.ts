@@ -25,7 +25,7 @@ export default defineConfig({
   manifest: {
     name: 'Contextual Vocabulary Weaver',
     version: '0.1.0',
-    permissions: ['storage', 'activeTab', 'scripting'],
+    permissions: ['storage', 'activeTab', 'scripting', 'tabs'],
     host_permissions: ['<all_urls>'],
     action: {}
   }
