@@ -126,10 +126,24 @@ async function runChecks() {
   }
 
   if (availability === 'downloadable') {
+    // availability() can lag behind the internals page installer.
+    // Try create() anyway — if the model is actually present it will succeed.
+    try {
+      const createFn = detected.shape === 'legacy'
+        ? () => detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: 'es' })
+        : () => detected.api.create({ sourceLanguage: 'en', targetLanguage: 'es' });
+      const t      = await createFn();
+      const result = await t.translate('Hello');
+      setStep('model', 'ok', `Model ready (availability lag) — test: "Hello" → "${result}" ✓`);
+      showSuccess();
+      return;
+    } catch (_) {
+      // Model genuinely not present — show install instructions.
+    }
     progressWrap.style.display = '';
     progressBar.className = 'progress-bar indeterminate';
     setStep('model', 'active',
-      'Model not yet downloaded. Open chrome://on-device-translation-internals, find en → es, and click Install.');
+      'Model not yet downloaded. Open chrome://on-device-translation-internals, find en → es, and click Install. Then restart Chrome.');
     return;
   }
 

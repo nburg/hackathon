@@ -111,10 +111,12 @@ export class TranslationPipeline {
           sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
         });
         if (availability !== 'unavailable') {
+          // Try create() even for 'downloadable' — the internals page may have
+          // installed the model without availability() reflecting it yet.
           this.translator = await Translator.create({
             sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
           });
-          console.log('[CVW] Using window.Translator (Chrome 138+).');
+          console.log(`[CVW] Using window.Translator (Chrome 138+, availability: ${availability}).`);
           return true;
         }
       } catch (e) {
