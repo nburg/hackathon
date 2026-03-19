@@ -31,25 +31,15 @@
       margin-bottom: 1rem;
     }
 
-    /* ── Step card ── */
-    .step-card {
-      display: flex;
-      gap: 1.2rem;
-      align-items: flex-start;
-    }
+    .step-card { display: flex; gap: 1.2rem; align-items: flex-start; }
 
     .step-icon {
       flex-shrink: 0;
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 2.4rem; height: 2.4rem;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      font-weight: 700;
-      background: #2d3448;
-      color: #94a3b8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700;
+      background: #2d3448; color: #94a3b8;
       transition: background 0.3s, color 0.3s;
     }
     .step-card.done   .step-icon { background: #166534; color: #4ade80; }
@@ -62,141 +52,71 @@
     }
 
     .step-body { flex: 1; }
-    .step-title {
-      font-weight: 600;
-      font-size: 1rem;
-      color: #f1f5f9;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    .step-title { font-weight: 600; font-size: 1rem; color: #f1f5f9; }
     .step-card.done .step-title { color: #4ade80; }
-    .badge {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
-      background: #166534;
-      color: #4ade80;
-    }
+
     .step-desc {
-      color: #94a3b8;
-      font-size: 0.875rem;
-      margin-top: 0.4rem;
-      line-height: 1.6;
+      color: #94a3b8; font-size: 0.875rem; margin-top: 0.4rem; line-height: 1.6;
     }
     .step-desc code {
-      background: #0f1117;
-      border: 1px solid #2d3448;
-      border-radius: 4px;
-      padding: 0.1rem 0.4rem;
-      font-size: 0.82rem;
-      color: #7dd3fc;
-      user-select: all;
+      background: #0f1117; border: 1px solid #2d3448; border-radius: 4px;
+      padding: 0.1rem 0.4rem; font-size: 0.82rem; color: #7dd3fc; user-select: all;
     }
-    .step-desc a { color: #60a5fa; text-decoration: none; }
-    .step-desc a:hover { text-decoration: underline; }
 
     .copy-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
+      display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem;
     }
     .copy-row code {
       flex: 1;
-      display: block;
-      background: #0f1117;
-      border: 1px solid #2d3448;
-      border-radius: 6px;
-      padding: 0.4rem 0.7rem;
-      font-size: 0.82rem;
-      color: #7dd3fc;
-      user-select: all;
+      background: #0f1117; border: 1px solid #2d3448; border-radius: 6px;
+      padding: 0.4rem 0.7rem; font-size: 0.82rem; color: #7dd3fc; user-select: all;
     }
     .copy-btn {
       flex-shrink: 0;
-      background: #2d3448;
-      border: none;
-      border-radius: 6px;
-      color: #94a3b8;
-      cursor: pointer;
-      padding: 0.4rem 0.7rem;
-      font-size: 0.8rem;
+      background: #2d3448; border: none; border-radius: 6px;
+      color: #94a3b8; cursor: pointer; padding: 0.4rem 0.7rem; font-size: 0.8rem;
       transition: background 0.15s, color 0.15s;
     }
-    .copy-btn:hover { background: #374151; color: #e2e8f0; }
+    .copy-btn:hover  { background: #374151; color: #e2e8f0; }
     .copy-btn.copied { background: #166534; color: #4ade80; }
 
     .status-bar {
-      margin-top: 0.7rem;
-      padding: 0.5rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.82rem;
-      font-weight: 500;
+      margin-top: 0.7rem; padding: 0.5rem 0.8rem;
+      border-radius: 6px; font-size: 0.82rem; font-weight: 500;
     }
-    .status-bar.checking  { background: #1e3a5f; color: #93c5fd; }
-    .status-bar.ok        { background: #14532d; color: #4ade80; }
-    .status-bar.warning   { background: #431407; color: #fb923c; }
-    .status-bar.error     { background: #450a0a; color: #f87171; }
+    .status-bar.checking { background: #1e3a5f; color: #93c5fd; }
+    .status-bar.ok       { background: #14532d; color: #4ade80; }
+    .status-bar.warning  { background: #431407; color: #fb923c; }
+    .status-bar.error    { background: #450a0a; color: #f87171; }
 
-    /* ── Progress bar for download ── */
     .progress-wrap {
-      margin-top: 0.7rem;
-      background: #2d3448;
-      border-radius: 999px;
-      height: 6px;
-      overflow: hidden;
+      margin-top: 0.7rem; background: #2d3448;
+      border-radius: 999px; height: 6px; overflow: hidden;
     }
-    .progress-bar {
-      height: 100%;
-      background: #3b82f6;
-      border-radius: 999px;
-      width: 0%;
-      transition: width 0.4s;
-    }
+    .progress-bar { height: 100%; background: #3b82f6; border-radius: 999px; width: 0%; }
     .progress-bar.indeterminate {
-      width: 40%;
-      animation: slide 1.4s ease-in-out infinite;
+      width: 40%; animation: slide 1.4s ease-in-out infinite;
     }
-    @keyframes slide {
-      0%   { transform: translateX(-100%); }
-      100% { transform: translateX(300%); }
-    }
+    @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
 
-    /* ── Success banner ── */
     #success-banner {
       display: none;
       background: linear-gradient(135deg, #14532d, #166534);
-      border: 1px solid #4ade80;
-      border-radius: 12px;
-      padding: 1.8rem 2rem;
-      width: 100%;
-      max-width: 580px;
-      text-align: center;
-      margin-bottom: 1rem;
+      border: 1px solid #4ade80; border-radius: 12px;
+      padding: 1.8rem 2rem; width: 100%; max-width: 580px;
+      text-align: center; margin-bottom: 1rem;
     }
     #success-banner h2 { color: #4ade80; font-size: 1.4rem; margin-bottom: 0.5rem; }
     #success-banner p  { color: #bbf7d0; font-size: 0.9rem; }
 
-    /* ── Footer ── */
     .footer {
-      max-width: 580px;
-      width: 100%;
-      margin-top: 1.2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.8rem;
-      color: #475569;
+      max-width: 580px; width: 100%; margin-top: 1.2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.8rem; color: #475569;
     }
-    #poll-status { font-size: 0.78rem; color: #475569; }
     .dot {
-      display: inline-block;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #3b82f6;
-      margin-right: 5px;
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #3b82f6; margin-right: 5px;
       animation: blink 1.5s ease-in-out infinite;
     }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
@@ -236,14 +156,14 @@
       </div>
       <div class="copy-row" style="margin-top:0.8rem">
         <code id="flag1-url">chrome://flags/#translation-api</code>
-        <button class="copy-btn" onclick="copyFlag('flag1-url', this)">Copy</button>
+        <button class="copy-btn" data-target="flag1-url">Copy</button>
       </div>
       <div class="step-desc" style="margin-top:0.3rem;margin-left:0.2rem">
         → Set to <strong style="color:#f8fafc">Enabled</strong>
       </div>
       <div class="copy-row" style="margin-top:0.6rem">
         <code id="flag2-url">chrome://flags/#optimization-guide-on-device-model</code>
-        <button class="copy-btn" onclick="copyFlag('flag2-url', this)">Copy</button>
+        <button class="copy-btn" data-target="flag2-url">Copy</button>
       </div>
       <div class="step-desc" style="margin-top:0.3rem;margin-left:0.2rem">
         → Set to <strong style="color:#f8fafc">Enabled BypassPerfRequirement</strong>
@@ -263,10 +183,11 @@
       </div>
       <div class="copy-row">
         <code id="internals-url">chrome://on-device-translation-internals</code>
-        <button class="copy-btn" onclick="copyFlag('internals-url', this)">Copy</button>
+        <button class="copy-btn" data-target="internals-url">Copy</button>
       </div>
       <div class="step-desc" style="margin-top:0.4rem">
-        Find <strong style="color:#f8fafc">en → es</strong> and click <strong style="color:#f8fafc">Install</strong> if it isn't downloading already.
+        Find <strong style="color:#f8fafc">en → es</strong> and click
+        <strong style="color:#f8fafc">Install</strong> if it isn't downloading already.
       </div>
       <div class="status-bar checking" id="status-model" style="display:none">Checking…</div>
       <div class="progress-wrap" id="progress-wrap" style="display:none">
@@ -280,131 +201,6 @@
     <span id="last-checked"></span>
   </div>
 
-  <script>
-    // ── helpers ────────────────────────────────────────────────────────────────
-
-    function setStep(id, state, message) {
-      const card   = document.getElementById('step-' + id);
-      const icon   = document.getElementById('icon-' + id);
-      const status = document.getElementById('status-' + id);
-
-      card.className = 'card step-card ' + (state === 'ok' ? 'done' : state === 'active' ? 'active' : state === 'error' ? 'error' : '');
-      icon.textContent = state === 'ok' ? '✓' : state === 'error' ? '✗' : icon.dataset.num ?? icon.textContent;
-
-      if (status) {
-        status.style.display = '';
-        status.className = 'status-bar ' + (state === 'ok' ? 'ok' : state === 'active' ? 'checking' : state === 'error' ? 'error' : 'warning');
-        status.textContent = message;
-      }
-    }
-
-    function copyFlag(elemId, btn) {
-      const text = document.getElementById(elemId).textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        btn.textContent = 'Copied!';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
-      });
-    }
-
-    // Preserve step numbers as data attributes before any state changes
-    document.querySelectorAll('.step-icon').forEach((el, i) => el.dataset.num = i + 1);
-
-    // ── main diagnostics ──────────────────────────────────────────────────────
-
-    async function runChecks() {
-      document.getElementById('last-checked').textContent =
-        'Last checked: ' + new Date().toLocaleTimeString();
-
-      // ── Step 1: Chrome version ─────────────────────────────────────────────
-      const match = navigator.userAgent.match(/Chrome\/(\d+)/);
-      const ver   = match ? parseInt(match[1]) : 0;
-
-      if (!match) {
-        setStep('version', 'error', 'Not Chrome — this extension requires Chrome 131+.');
-        setStep('flags',   '',      'Waiting for step 1…');
-        setStep('model',   '',      '');
-        return;
-      }
-      if (ver < 131) {
-        setStep('version', 'error', `Chrome ${ver} detected — please update to 131 or later.`);
-        setStep('flags',   '',      'Waiting for step 1…');
-        setStep('model',   '',      '');
-        return;
-      }
-      setStep('version', 'ok', `Chrome ${ver} ✓`);
-
-      // ── Step 2: Flags — inferred from window.ai.translator presence ────────
-      if (!window.ai?.translator) {
-        setStep('flags', 'active',
-          'window.ai.translator not found — enable both flags above, then relaunch Chrome.');
-        setStep('model', '', '');
-        document.getElementById('status-model').style.display = 'none';
-        document.getElementById('progress-wrap').style.display = 'none';
-        return;
-      }
-      setStep('flags', 'ok', 'Both flags are active ✓');
-
-      // ── Step 3: Language model availability ────────────────────────────────
-      let availability;
-      try {
-        availability = await window.ai.translator.availability({
-          sourceLanguage: 'en',
-          targetLanguage: 'es',
-        });
-      } catch (e) {
-        setStep('model', 'error', 'availability() threw: ' + e);
-        return;
-      }
-
-      const modelStatus = document.getElementById('status-model');
-      const progressWrap = document.getElementById('progress-wrap');
-      const progressBar  = document.getElementById('progress-bar');
-      modelStatus.style.display = '';
-
-      if (availability === 'available') {
-        progressWrap.style.display = 'none';
-
-        // Quick smoke-test translation
-        try {
-          const t = await window.ai.translator.create({ sourceLanguage: 'en', targetLanguage: 'es' });
-          const result = await t.translate('Hello');
-          setStep('model', 'ok', `Model ready — test translation: "Hello" → "${result}" ✓`);
-          showSuccess();
-        } catch (e) {
-          setStep('model', 'error', 'create() / translate() failed: ' + e);
-        }
-        return;
-      }
-
-      if (availability === 'downloadable') {
-        progressWrap.style.display = '';
-        progressBar.className = 'progress-bar indeterminate';
-        setStep('model', 'active',
-          'Model not yet downloaded. Open chrome://on-device-translation-internals, find en → es, and click Install.');
-        return;
-      }
-
-      if (availability === 'downloading') {
-        progressWrap.style.display = '';
-        progressBar.className = 'progress-bar indeterminate';
-        setStep('model', 'active', 'Downloading… this page will update automatically when done.');
-        return;
-      }
-
-      // unavailable
-      setStep('model', 'error',
-        'availability returned "unavailable". Make sure both flags are set and Chrome was relaunched after enabling them.');
-    }
-
-    function showSuccess() {
-      document.getElementById('success-banner').style.display = 'block';
-      document.getElementById('poll-status').innerHTML = '✓ Setup complete';
-    }
-
-    // ── polling ────────────────────────────────────────────────────────────────
-    runChecks();
-    setInterval(runChecks, 3000);
-  </script>
+  <script src="setup.js"></script>
 </body>
 </html>
