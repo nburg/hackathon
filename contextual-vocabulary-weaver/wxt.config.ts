@@ -24,6 +24,10 @@ export default defineConfig({
   }),
   runner: {
     startUrls: ['https://en.wikipedia.org/wiki/Wikipedia'],
+    // Persist the Chrome profile across runs so flags, downloaded language
+    // models, and extension settings survive restarts.
+    chromiumProfile: path.resolve(__dir, '.chrome-profile'),
+    keepProfileChanges: true,
   },
   manifest: {
     name: 'Contextual Vocabulary Weaver',
