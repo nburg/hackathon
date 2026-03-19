@@ -11,9 +11,8 @@
  */
 
 import type { WordStats, ExtensionSettings, StorageSchema } from './types';
+import { STORAGE_KEYS, DEFAULT_SETTINGS } from './types';
 import {
-  STORAGE_KEYS,
-  DEFAULT_SETTINGS,
   TOP_200_COMMON_WORDS,
   PHASE2_THRESHOLD,
   KNOWN_THRESHOLD,

@@ -30,10 +30,17 @@ interface Translator {
 const SOURCE_LANG = 'en';
 const TARGET_LANG = 'es';
 
+// P5 Integration: Tracking callbacks interface
+interface TrackingCallbacks {
+  onExposure: (word: string) => Promise<void>;
+  onRecallFailure: (word: string) => Promise<void>;
+}
+
 export class TranslationPipeline {
   private translator: Translator | null = null;
   private phase2Active = false;
   private phase2Callback: (() => void) | null = null;
+  private trackingCallbacks: TrackingCallbacks | null = null;
 
   /**
    * Checks API availability and warms up the translator.
@@ -82,16 +89,24 @@ export class TranslationPipeline {
   }
 
   /**
+   * ✅ P5 Integration: Register tracking callbacks for word exposure and recall failures.
+   * Called by content script after initializing the pipeline.
+   */
+  setTrackingCallbacks(callbacks: TrackingCallbacks): void {
+    this.trackingCallbacks = callbacks;
+  }
+
+  /**
    * Main entry point. Extracts candidates from the live document via P3,
    * filters by density + priority, translates each one, and swaps them
    * in-place in the DOM.
    *
    * @param densityFraction  0.01–0.10, sourced from P2's settings slider
-   * @param getPriority      Word priority scorer from P5's `getWordPriority()`
+   * @param getPriority      Word priority scorer from P5's `getWordPriority()` (async)
    */
   async run(
     densityFraction: number,
-    getPriority: (word: string) => number = () => 1,
+    getPriority: (word: string) => Promise<number> = async () => 1,
   ): Promise<void> {
     if (!this.translator) {
       console.warn('[CVW] Call init() before run().');
@@ -113,9 +128,20 @@ export class TranslationPipeline {
       (c) => !c.isProperNoun && !c.isMultiWord,
     );
 
-    const sorted = eligible.sort((a, b) => getPriority(b.word) - getPriority(a.word));
+    // ✅ P5 Integration: Get priority scores for all eligible words
+    const withPriorities = await Promise.all(
+      eligible.map(async (c) => ({
+        candidate: c,
+        priority: await getPriority(c.word)
+      }))
+    );
+
+    // Sort by priority (highest first) and select top N% based on density
+    const sorted = withPriorities.sort((a, b) => b.priority - a.priority);
     const count = Math.max(1, Math.round(sorted.length * densityFraction));
-    const selected = sorted.slice(0, count);
+    const selected = sorted.slice(0, count).map(x => x.candidate);
+
+    console.log(`[CVW] Selected ${selected.length} words out of ${eligible.length} candidates (${(densityFraction * 100).toFixed(1)}% density)`);
 
     // Group by text node and process each group concurrently.
     // Within a group, replace right-to-left so earlier offsets stay valid.
@@ -139,7 +165,13 @@ export class TranslationPipeline {
     for (const candidate of sorted) {
       try {
         const translated = await this.translator!.translate(candidate.word);
-        replaceInDom(candidate, translated);
+        replaceInDom(candidate, translated, this.trackingCallbacks);
+
+        // ✅ P5 Integration: Track word exposure after successful replacement
+        if (this.trackingCallbacks) {
+          await this.trackingCallbacks.onExposure(candidate.word);
+          console.log(`[CVW] Tracked exposure: "${candidate.word}" → "${translated}"`);
+        }
       } catch (err) {
         console.error(`[CVW] Translation failed for "${candidate.word}":`, err);
       }
@@ -171,7 +203,11 @@ function groupByNode(candidates: WordCandidate[]): Map<Text, WordCandidate[]> {
  * Before: [... word ...]  (single Text node)
  * After:  [...before][<span>translation</span>][after...]
  */
-function replaceInDom(candidate: WordCandidate, translation: string): void {
+function replaceInDom(
+  candidate: WordCandidate,
+  translation: string,
+  trackingCallbacks: TrackingCallbacks | null
+): void {
   const { node, word, offset, length } = candidate;
   const parent = node.parentNode;
   if (!parent) return;
@@ -180,7 +216,7 @@ function replaceInDom(candidate: WordCandidate, translation: string): void {
   const wordNode = node.splitText(offset);
   const restNode = wordNode.splitText(length);
 
-  const span = createWordSpan(word, translation);
+  const span = createWordSpan(word, translation, trackingCallbacks);
 
   // Swap the word text node for the span; restNode stays in place automatically.
   parent.replaceChild(span, wordNode);
@@ -188,7 +224,11 @@ function replaceInDom(candidate: WordCandidate, translation: string): void {
   void restNode; // already re-attached to the DOM by splitText
 }
 
-function createWordSpan(original: string, translation: string): HTMLSpanElement {
+function createWordSpan(
+  original: string,
+  translation: string,
+  trackingCallbacks: TrackingCallbacks | null
+): HTMLSpanElement {
   const span = document.createElement('span');
   span.className = 'cvw-word';
   span.dataset.original = original;
@@ -196,8 +236,24 @@ function createWordSpan(original: string, translation: string): HTMLSpanElement 
   span.textContent = translation;
   span.title = original; // fallback tooltip
 
-  span.addEventListener('mouseenter', () => { span.textContent = original; });
-  span.addEventListener('mouseleave', () => { span.textContent = translation; });
+  // ✅ P5 Integration: Track recall failure when user hovers (forgot the word)
+  let hasHovered = false; // Only track first hover per word instance
+
+  span.addEventListener('mouseenter', () => {
+    span.textContent = original;
+
+    // Track recall failure on first hover (user needed to see original = forgot it)
+    if (!hasHovered && trackingCallbacks) {
+      hasHovered = true;
+      trackingCallbacks.onRecallFailure(original).then(() => {
+        console.log(`[CVW] Tracked recall failure: "${original}"`);
+      });
+    }
+  });
+
+  span.addEventListener('mouseleave', () => {
+    span.textContent = translation;
+  });
 
   return span;
 }

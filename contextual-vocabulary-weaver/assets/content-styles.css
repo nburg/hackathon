@@ -1,0 +1,66 @@
+/**
+ * Contextual Vocabulary Weaver - Content Script Styles
+ *
+ * These styles make replaced words visually distinct while keeping
+ * them readable and non-intrusive.
+ */
+
+.cvw-word {
+  /* Visual distinction: subtle underline with color */
+  border-bottom: 2px dashed #4CAF50;
+
+  /* Cursor indicates interactivity */
+  cursor: help;
+
+  /* Slight color tint to indicate translation */
+  color: #2e7d32;
+
+  /* Smooth transitions for hover effects */
+  transition: all 0.2s ease-in-out;
+
+  /* Preserve text formatting */
+  font-weight: inherit;
+  font-style: inherit;
+  text-decoration: inherit;
+
+  /* Slight padding for better clickability */
+  padding: 0 2px;
+
+  /* Ensure text doesn't wrap awkwardly */
+  display: inline;
+}
+
+.cvw-word:hover {
+  /* Highlight on hover */
+  background-color: #e8f5e9;
+  border-bottom-color: #1b5e20;
+  color: #1b5e20;
+
+  /* Slight scale for emphasis */
+  transform: scale(1.02);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .cvw-word {
+    border-bottom-color: #81c784;
+    color: #a5d6a7;
+  }
+
+  .cvw-word:hover {
+    background-color: rgba(129, 199, 132, 0.2);
+    border-bottom-color: #c8e6c9;
+    color: #c8e6c9;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .cvw-word {
+    transition: none;
+  }
+
+  .cvw-word:hover {
+    transform: none;
+  }
+}
