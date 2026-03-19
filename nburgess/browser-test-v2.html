@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P3 Module Browser Test v2</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f7fa;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .controls {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+    .results {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .candidate {
+      background: #f9fafb;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border-left: 4px solid #667eea;
+      border-radius: 4px;
+    }
+    .word {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: #1f2937;
+    }
+    .pos-tag {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      margin: 0 5px;
+    }
+    .flag {
+      display: inline-block;
+      background: #f59e0b;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      margin: 0 5px;
+    }
+    .sample-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    nav {
+      background: #374151;
+      color: white;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+    }
+    code {
+      background: #1f2937;
+      color: #10b981;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔬 P3 Module Browser Test (Bundled)</h1>
+    <p>Test DOM traversal and NLP extraction - No CORS issues!</p>
+  </div>
+
+  <div class="controls">
+    <h2>Test Controls</h2>
+    <button onclick="runExtraction()">🚀 Extract Word Candidates</button>
+    <button onclick="extractNounsOnly()">📘 Extract Nouns Only</button>
+    <button onclick="extractNoProperNouns()">🚫 No Proper Nouns</button>
+    <button onclick="extractLongWords()">📏 Long Words (7+ chars)</button>
+    <button onclick="clearResults()">🗑️ Clear Results</button>
+  </div>
+
+  <div id="stats-container"></div>
+
+  <div class="results">
+    <h2>Extraction Results</h2>
+    <div id="results">
+      <p style="color: #6b7280;">Click "Extract Word Candidates" to start...</p>
+    </div>
+  </div>
+
+  <!-- Sample content that should be skipped -->
+  <nav role="navigation">
+    <a href="#home">Home</a>
+    <a href="#about">About</a>
+  </nav>
+
+  <!-- Sample content for extraction -->
+  <div class="sample-content">
+    <article>
+      <h2>The Benefits of Language Learning</h2>
+      <p>Learning a new language opens doors to understanding different cultures. It can improve your cognitive abilities and enhance your career prospects.</p>
+      <p>Many people find that language learning becomes easier with practice. The key is consistent exposure and active engagement.</p>
+
+      <code>// This should be IGNORED
+      function test() {}</code>
+
+      <h3>Key Benefits</h3>
+      <ul>
+        <li>Improves memory and concentration</li>
+        <li>Enhances multitasking abilities</li>
+        <li>Strengthens problem-solving skills</li>
+      </ul>
+
+      <p>Maria Rodriguez from Barcelona visited Paris and studied linguistics. Her journey demonstrates multilingual benefits.</p>
+    </article>
+  </div>
+
+  <script type="module">
+    // Load the bundled version (includes compromise.js)
+    import * as P3 from './dist/browser.js';
+
+    window.P3 = P3;
+    console.log('✅ P3 Module loaded!');
+
+    window.runExtraction = function() {
+      const candidates = P3.extractCandidates(document);
+      displayResults(candidates, 'All Word Candidates');
+      console.log(`Found ${candidates.length} candidates:`, candidates);
+    };
+
+    window.extractNounsOnly = function() {
+      const candidates = P3.extractCandidates(document);
+      const nouns = P3.filterCandidates(candidates, c => c.pos === 'Noun');
+      displayResults(nouns, 'Nouns Only');
+    };
+
+    window.extractNoProperNouns = function() {
+      const candidates = P3.extractCandidates(document);
+      const filtered = P3.filterCandidates(candidates, c => !c.isProperNoun);
+      displayResults(filtered, 'Excluding Proper Nouns');
+    };
+
+    window.extractLongWords = function() {
+      const candidates = P3.extractCandidates(document);
+      const long = P3.filterCandidates(candidates, c => c.word.length >= 7);
+      displayResults(long, 'Long Words (7+ characters)');
+    };
+
+    window.clearResults = function() {
+      document.getElementById('results').innerHTML = '<p style="color: #6b7280;">Click "Extract Word Candidates" to start...</p>';
+      document.getElementById('stats-container').innerHTML = '';
+    };
+
+    function displayResults(candidates, title) {
+      const resultsDiv = document.getElementById('results');
+      const statsDiv = document.getElementById('stats-container');
+
+      const posCounts = candidates.reduce((acc, c) => {
+        acc[c.pos] = (acc[c.pos] || 0) + 1;
+        return acc;
+      }, {});
+
+      const properNouns = candidates.filter(c => c.isProperNoun).length;
+
+      statsDiv.innerHTML = `
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-value">${candidates.length}</div>
+            <div class="stat-label">Total Words</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${posCounts.Noun || 0}</div>
+            <div class="stat-label">Nouns</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${posCounts.Verb || 0}</div>
+            <div class="stat-label">Verbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${posCounts.Adjective || 0}</div>
+            <div class="stat-label">Adjectives</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${posCounts.Adverb || 0}</div>
+            <div class="stat-label">Adverbs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${properNouns}</div>
+            <div class="stat-label">Proper Nouns</div>
+          </div>
+        </div>
+      `;
+
+      let html = `<h3>${title} (${candidates.length} words)</h3>`;
+
+      if (candidates.length === 0) {
+        html += '<p>No candidates found.</p>';
+      } else {
+        candidates.slice(0, 50).forEach((c) => {
+          const flags = [];
+          if (c.isProperNoun) flags.push('<span class="flag">Proper Noun</span>');
+          if (c.isMultiWord) flags.push('<span class="flag">Multi-word</span>');
+
+          html += `
+            <div class="candidate">
+              <span class="word">"${c.word}"</span>
+              <span class="pos-tag">${c.pos}</span>
+              ${flags.join('')}
+            </div>
+          `;
+        });
+
+        if (candidates.length > 50) {
+          html += `<p style="color: #6b7280; margin-top: 1rem;">Showing first 50 of ${candidates.length}. Check console for full list.</p>`;
+        }
+      }
+
+      resultsDiv.innerHTML = html;
+    }
+  </script>
+</body>
+</html>

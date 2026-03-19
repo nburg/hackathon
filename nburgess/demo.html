@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P3 Module Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .demo-section {
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+    .results {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .candidate {
+      background: white;
+      padding: 10px;
+      margin: 5px 0;
+      border-left: 3px solid #667eea;
+      border-radius: 3px;
+    }
+    .pos-tag {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-right: 5px;
+    }
+    .flag {
+      display: inline-block;
+      background: #f59e0b;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-right: 5px;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .stat {
+      background: #e0e7ff;
+      padding: 15px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    nav {
+      background: #333;
+      color: white;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation (should be skipped) -->
+  <nav role="navigation">
+    <a href="#home">Home</a>
+    <a href="#about">About</a>
+  </nav>
+
+  <h1>P3 Module Demo - DOM & NLP Extraction</h1>
+
+  <!-- Sample content for extraction -->
+  <article class="demo-section">
+    <h2>Sample Article Content</h2>
+    <p>Learning a new language opens doors to understanding different cultures. It can improve your cognitive abilities and enhance your career prospects.</p>
+
+    <p>Many people find that language learning becomes easier with practice. The key is consistent exposure and active engagement with the material.</p>
+
+    <code>
+      // This code block should be ignored
+      function hello() {
+        console.log("Hello World");
+      }
+    </code>
+
+    <h3>Benefits of Language Learning</h3>
+    <ul>
+      <li>Improves memory and concentration</li>
+      <li>Enhances multitasking abilities</li>
+      <li>Delays cognitive decline</li>
+    </ul>
+
+    <p>John visited Paris last summer and discovered the beautiful architecture of the city.</p>
+  </article>
+
+  <!-- Demo controls -->
+  <div class="demo-section">
+    <h2>Test Controls</h2>
+    <button onclick="extractAndDisplay()">Extract Word Candidates</button>
+    <button onclick="extractNounsOnly()">Extract Nouns Only</button>
+    <button onclick="extractNoProperNouns()">Extract (No Proper Nouns)</button>
+    <button onclick="clearResults()">Clear Results</button>
+  </div>
+
+  <!-- Results display -->
+  <div class="demo-section">
+    <h2>Extraction Results</h2>
+    <div class="stats" id="stats"></div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <script type="module">
+    import { extractCandidates, filterCandidates, groupCandidatesByElement } from './dist/index.js';
+
+    window.extractAndDisplay = function() {
+      const candidates = extractCandidates(document);
+      displayResults(candidates, 'All Candidates');
+    };
+
+    window.extractNounsOnly = function() {
+      const candidates = extractCandidates(document);
+      const nouns = filterCandidates(candidates, c => c.pos === 'Noun');
+      displayResults(nouns, 'Nouns Only');
+    };
+
+    window.extractNoProperNouns = function() {
+      const candidates = extractCandidates(document);
+      const filtered = filterCandidates(candidates, c => !c.isProperNoun);
+      displayResults(filtered, 'No Proper Nouns');
+    };
+
+    window.clearResults = function() {
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('stats').innerHTML = '';
+    };
+
+    function displayResults(candidates, title) {
+      const resultsDiv = document.getElementById('results');
+      const statsDiv = document.getElementById('stats');
+
+      // Calculate stats
+      const posCounts = candidates.reduce((acc, c) => {
+        acc[c.pos] = (acc[c.pos] || 0) + 1;
+        return acc;
+      }, {});
+
+      const properNouns = candidates.filter(c => c.isProperNoun).length;
+      const multiWords = candidates.filter(c => c.isMultiWord).length;
+
+      // Display stats
+      statsDiv.innerHTML = `
+        <div class="stat">
+          <div class="stat-value">${candidates.length}</div>
+          <div class="stat-label">Total Words</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${posCounts.Noun || 0}</div>
+          <div class="stat-label">Nouns</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${posCounts.Verb || 0}</div>
+          <div class="stat-label">Verbs</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${posCounts.Adjective || 0}</div>
+          <div class="stat-label">Adjectives</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${posCounts.Adverb || 0}</div>
+          <div class="stat-label">Adverbs</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">${properNouns}</div>
+          <div class="stat-label">Proper Nouns</div>
+        </div>
+      `;
+
+      // Display candidates
+      let html = `<h3>${title}</h3>`;
+
+      if (candidates.length === 0) {
+        html += '<p>No candidates found.</p>';
+      } else {
+        candidates.forEach((candidate, index) => {
+          const flags = [];
+          if (candidate.isProperNoun) flags.push('Proper Noun');
+          if (candidate.isMultiWord) flags.push('Multi-word');
+
+          html += `
+            <div class="candidate">
+              <strong>${candidate.word}</strong>
+              <span class="pos-tag">${candidate.pos}</span>
+              ${flags.map(f => `<span class="flag">${f}</span>`).join('')}
+              <br>
+              <small>Offset: ${candidate.offset}, Length: ${candidate.length}</small>
+            </div>
+          `;
+        });
+      }
+
+      resultsDiv.innerHTML = html;
+    }
+
+    // Auto-extract on load
+    console.log('P3 Module Demo Ready!');
+    console.log('Click the buttons above to extract word candidates.');
+  </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P3 Module - Drag & Drop Tester</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #667eea;
+      margin-top: 0;
+    }
+    .bookmarklet {
+      background: #1f2937;
+      color: #10b981;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+    .bookmarklet a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 10px 20px;
+      background: #667eea;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    .step {
+      background: #f0f9ff;
+      padding: 15px;
+      border-left: 4px solid #667eea;
+      margin: 15px 0;
+    }
+    .warning {
+      background: #fef3c7;
+      padding: 15px;
+      border-left: 4px solid #f59e0b;
+      margin: 15px 0;
+    }
+    code {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔬 P3 Module Tester</h1>
+    <p>Test the P3 DOM & NLP extraction module on any website!</p>
+
+    <div class="warning">
+      <strong>⚠️ Important:</strong> Make sure your local server is running with CORS enabled:
+      <div class="bookmarklet">npx http-server . -p 8080 --cors</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Method 1: Bookmarklet (Easiest)</h2>
+
+    <div class="step">
+      <strong>Step 1:</strong> Drag this link to your bookmarks bar:
+      <div class="bookmarklet">
+        <a href="javascript:(function(){const s=document.createElement('script');s.type='module';s.textContent=`import('http://localhost:8080/dist/index.js').then(P3=>{window.P3=P3;const c=P3.extractCandidates(document);const p=c.reduce((a,x)=>(a[x.pos]=(a[x.pos]||0)+1,a),{});console.log('✅ P3 Loaded! Found',c.length,'candidates');console.log('POS:',p);console.table(c.slice(0,20));alert('P3 Ready!\\n\\nFound: '+c.length+' words\\nNouns: '+(p.Noun||0)+'\\nVerbs: '+(p.Verb||0)+'\\n\\nCheck console!');}).catch(e=>alert('Error: '+e.message));`;document.body.appendChild(s);})();">
+          📚 P3 Extract Words
+        </a>
+      </div>
+    </div>
+
+    <div class="step">
+      <strong>Step 2:</strong> Visit any website (news, Wikipedia, blog)
+    </div>
+
+    <div class="step">
+      <strong>Step 3:</strong> Click the bookmarklet!
+    </div>
+
+    <p>You'll see an alert with the results and detailed output in the console.</p>
+  </div>
+
+  <div class="card">
+    <h2>Method 2: Browser Console</h2>
+
+    <div class="step">
+      <strong>Step 1:</strong> Open any website
+    </div>
+
+    <div class="step">
+      <strong>Step 2:</strong> Open DevTools (F12) → Console
+    </div>
+
+    <div class="step">
+      <strong>Step 3:</strong> Paste this code:
+      <div class="bookmarklet">
+import('http://localhost:8080/dist/index.js').then(P3 => {
+  window.P3 = P3;
+  const candidates = P3.extractCandidates(document);
+  console.log(`Found ${candidates.length} candidates`);
+  console.table(candidates.slice(0, 20));
+});
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Method 3: Local Test Page</h2>
+    <p>Open in your browser:</p>
+    <div class="bookmarklet">
+      <a href="http://localhost:8080/browser-test.html" target="_blank">
+        http://localhost:8080/browser-test.html
+      </a>
+    </div>
+    <p>This has a full UI with sample content and test buttons.</p>
+  </div>
+
+  <div class="card">
+    <h2>📊 What You'll See</h2>
+    <p>After extraction, check the console for:</p>
+    <ul>
+      <li><strong>Total candidates:</strong> Number of words extracted</li>
+      <li><strong>POS distribution:</strong> How many nouns, verbs, adjectives, etc.</li>
+      <li><strong>Sample words:</strong> First 20 candidates in a table</li>
+      <li><strong>Proper nouns:</strong> Names and places flagged</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>✅ Expected Behavior</h2>
+    <ul>
+      <li>✅ Extracts words from paragraphs, headings, lists</li>
+      <li>✅ Skips navigation links</li>
+      <li>✅ Ignores code blocks (<code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code>)</li>
+      <li>✅ Identifies parts of speech (Noun, Verb, etc.)</li>
+      <li>✅ Flags proper nouns (names, places)</li>
+      <li>✅ Provides DOM node references for replacement</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🧪 Example Commands</h2>
+    <p>Once loaded, try these in the console:</p>
+
+    <div class="bookmarklet">
+// Get all nouns
+const nouns = P3.filterCandidates(
+  P3.extractCandidates(document),
+  c => c.pos === 'Noun'
+);
+console.log('Nouns:', nouns.map(n => n.word));
+
+// Exclude proper nouns
+const common = P3.filterCandidates(
+  P3.extractCandidates(document),
+  c => !c.isProperNoun
+);
+
+// Group by element
+const groups = P3.groupCandidatesByElement(
+  P3.extractCandidates(document)
+);
+console.log(`Distributed across ${groups.size} elements`);
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔧 Troubleshooting</h2>
+
+    <h3>CORS Error?</h3>
+    <p>Make sure the server is running with <code>--cors</code> flag:</p>
+    <div class="bookmarklet">npx http-server . -p 8080 --cors</div>
+
+    <h3>Module not found?</h3>
+    <p>Build the project first:</p>
+    <div class="bookmarklet">npm run build</div>
+
+    <h3>No candidates extracted?</h3>
+    <p>The page might not have readable content. Try a news article or Wikipedia page.</p>
+  </div>
+</body>
+</html>

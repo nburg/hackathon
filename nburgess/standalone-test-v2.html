@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P3 Module - Quick Tester (Fixed)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #667eea;
+      margin-top: 0;
+    }
+    .bookmarklet {
+      background: #1f2937;
+      color: #10b981;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+    .bookmarklet a {
+      color: white;
+      background: #667eea;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 18px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 10px;
+      transition: all 0.2s;
+    }
+    .bookmarklet a:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .step {
+      background: #f0f9ff;
+      padding: 15px;
+      border-left: 4px solid #667eea;
+      margin: 15px 0;
+    }
+    .success {
+      background: #d1fae5;
+      padding: 15px;
+      border-left: 4px solid #10b981;
+      margin: 15px 0;
+    }
+    code {
+      background: #e5e7eb;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎉 P3 Module Tester (FIXED!)</h1>
+    <p>Now with bundled version - no more CORS errors!</p>
+
+    <div class="success">
+      <strong>✅ Fixed:</strong> Everything is bundled together including compromise.js. Works on any website!
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📚 Drag This to Your Bookmarks Bar:</h2>
+
+    <div class="bookmarklet">
+      <a href="javascript:(function(){const s=document.createElement('script');s.type='module';s.textContent=`import('http://localhost:8080/dist/browser.js').then(P3=>{window.P3=P3;const c=P3.extractCandidates(document);const p=c.reduce((a,x)=>(a[x.pos]=(a[x.pos]||0)+1,a),{});console.log('✅ P3 Loaded!');console.log('📊 Found',c.length,'candidates');console.log('📈 POS:',p);console.table(c.slice(0,20));alert('P3 Module Ready!\\n\\nFound: '+c.length+' words\\nNouns: '+(p.Noun||0)+'\\nVerbs: '+(p.Verb||0)+'\\nAdjectives: '+(p.Adjective||0)+'\\nAdverbs: '+(p.Adverb||0)+'\\n\\nCheck console for details!');}).catch(e=>{console.error('Error:',e);alert('Error loading P3: '+e.message+'\\n\\nMake sure server is running: npx http-server . -p 8080 --cors');});`;document.body.appendChild(s);})();">
+        🔬 Test P3 Module
+      </a>
+    </div>
+
+    <p><strong>How to use:</strong></p>
+    <ol>
+      <li>Drag the button above to your bookmarks bar</li>
+      <li>Visit ANY website (try atomicacademia.com, Wikipedia, BBC News)</li>
+      <li>Click the bookmarklet!</li>
+      <li>See results in an alert + detailed info in console</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>🖥️ Or Use Browser Console</h2>
+
+    <div class="step">
+      <strong>Step 1:</strong> Make sure server is running:
+      <div class="bookmarklet">npx http-server . -p 8080 --cors</div>
+    </div>
+
+    <div class="step">
+      <strong>Step 2:</strong> On any website, open console (F12) and paste:
+      <div class="bookmarklet">
+import('http://localhost:8080/dist/browser.js').then(P3 => {
+  window.P3 = P3;
+  const candidates = P3.extractCandidates(document);
+  console.log(`Found ${candidates.length} candidates`);
+  console.table(candidates.slice(0, 20));
+});
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎨 Or Use Local Test Page</h2>
+    <p>Open this in your browser:</p>
+    <div class="bookmarklet">
+      <a href="http://localhost:8080/browser-test-v2.html" target="_blank">
+        http://localhost:8080/browser-test-v2.html
+      </a>
+    </div>
+    <p>Has sample content and interactive buttons.</p>
+  </div>
+
+  <div class="card">
+    <h2>✅ What's Working Now</h2>
+    <ul>
+      <li>✅ <strong>No CORS errors</strong> - everything is bundled</li>
+      <li>✅ <strong>Works on any website</strong> - atomicacademia.com, Wikipedia, etc.</li>
+      <li>✅ <strong>Extracts content words</strong> - nouns, verbs, adjectives, adverbs</li>
+      <li>✅ <strong>Skips navigation</strong> - nav links, footers, etc.</li>
+      <li>✅ <strong>Ignores code blocks</strong> - <code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code> tags</li>
+      <li>✅ <strong>Identifies proper nouns</strong> - names, places</li>
+      <li>✅ <strong>Provides DOM references</strong> - for P4 to replace text</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🧪 Example Commands (After Loading)</h2>
+    <div class="bookmarklet">
+// Get all nouns
+const nouns = P3.filterCandidates(
+  P3.extractCandidates(document),
+  c => c.pos === 'Noun'
+);
+console.log('Nouns:', nouns.map(n => n.word));
+
+// Exclude proper nouns (names/places)
+const common = P3.filterCandidates(
+  P3.extractCandidates(document),
+  c => !c.isProperNoun
+);
+console.log('Common words:', common.slice(0, 10));
+
+// Get long words (7+ chars)
+const long = P3.filterCandidates(
+  P3.extractCandidates(document),
+  c => c.word.length >= 7
+);
+console.log('Long words:', long.map(w => w.word));
+
+// Group by parent element
+const groups = P3.groupCandidatesByElement(
+  P3.extractCandidates(document)
+);
+console.log(`Words across ${groups.size} elements`);
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🌐 Recommended Test Sites</h2>
+    <ul>
+      <li><strong>atomicacademia.com</strong> - Your original site</li>
+      <li><strong>bbc.com/news</strong> - News articles (100-300 words)</li>
+      <li><strong>en.wikipedia.org</strong> - Structured content (200-500 words)</li>
+      <li><strong>medium.com</strong> - Blog posts (100-200 words)</li>
+      <li><strong>developer.mozilla.org</strong> - Should skip all code blocks!</li>
+    </ul>
+  </div>
+</body>
+</html>
