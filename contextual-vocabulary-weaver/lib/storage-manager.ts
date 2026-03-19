@@ -2,9 +2,9 @@
  * Storage Manager - Core Data Layer
  *
  * Database Analogy: This file contains all your stored procedures and data access functions
- * It provides a clean API for CRUD operations on chrome.storage.local
+ * It provides a clean API for CRUD operations on browser.storage.local
  *
- * chrome.storage.local is like an embedded NoSQL database (similar to SQLite or Redis)
+ * browser.storage.local is like an embedded NoSQL database (similar to SQLite or Redis)
  * - Async API (like Oracle's PL/SQL with COMMIT statements)
  * - Key-value store (like Redis: SET key value, GET key)
  * - No SQL queries (we handle filtering in JavaScript)
@@ -35,7 +35,7 @@ import {
  * @returns Current settings or default settings if none exist
  */
 export async function getSettings(): Promise<ExtensionSettings> {
-  const data = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+  const data = await browser.storage.local.get(STORAGE_KEYS.SETTINGS);
   return (data.settings as ExtensionSettings) || DEFAULT_SETTINGS;
 }
 
@@ -59,7 +59,7 @@ export async function updateSettings(
   };
 
   // Write back to storage (COMMIT equivalent)
-  await chrome.storage.local.set({
+  await browser.storage.local.set({
     [STORAGE_KEYS.SETTINGS]: updatedSettings,
   });
 }
@@ -78,7 +78,7 @@ export async function updateSettings(
  * @returns Word statistics or null if word hasn't been tracked yet
  */
 export async function getWordStats(word: string): Promise<WordStats | null> {
-  const data = await chrome.storage.local.get(STORAGE_KEYS.WORD_STATS);
+  const data = await browser.storage.local.get(STORAGE_KEYS.WORD_STATS);
   const allStats = (data.word_stats as Record<string, WordStats>) || {};
   return allStats[word] || null;
 }
@@ -92,7 +92,7 @@ export async function getWordStats(word: string): Promise<WordStats | null> {
  * @returns Map of all tracked words (word -> WordStats)
  */
 export async function getAllWordStats(): Promise<Record<string, WordStats>> {
-  const data = await chrome.storage.local.get(STORAGE_KEYS.WORD_STATS);
+  const data = await browser.storage.local.get(STORAGE_KEYS.WORD_STATS);
   return (data.word_stats as Record<string, WordStats>) || {};
 }
 
@@ -143,7 +143,7 @@ export async function trackExposure(word: string): Promise<void> {
   }
 
   // Write back to storage (COMMIT)
-  await chrome.storage.local.set({
+  await browser.storage.local.set({
     [STORAGE_KEYS.WORD_STATS]: allStats,
   });
 }
@@ -176,7 +176,7 @@ export async function trackRecallFailure(word: string): Promise<void> {
   );
 
   // Write back (COMMIT)
-  await chrome.storage.local.set({
+  await browser.storage.local.set({
     [STORAGE_KEYS.WORD_STATS]: allStats,
   });
 }
@@ -401,7 +401,7 @@ export async function checkAndTriggerPhase2(): Promise<boolean> {
  * WARNING: This is destructive! Use only for testing.
  */
 export async function clearAllData(): Promise<void> {
-  await chrome.storage.local.clear();
+  await browser.storage.local.clear();
   console.warn('⚠️ All storage data cleared');
 }
 
