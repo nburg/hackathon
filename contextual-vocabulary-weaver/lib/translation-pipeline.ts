@@ -13,6 +13,17 @@ declare global {
       createTranslator(options: TranslatorOptions): Promise<Translator>;
     };
   }
+
+  // Firefox 118+ WebExtension translations API (not yet in community types)
+  const browser: typeof browser & {
+    translations?: {
+      translateText(options: {
+        text: string;
+        fromLanguage: string;
+        toLanguage: string;
+      }): Promise<{ translatedText: string }>;
+    };
+  };
 }
 
 interface TranslatorOptions {
@@ -24,30 +35,15 @@ interface Translator {
   translate(text: string): Promise<string>;
 }
 
-/** Fallback translator using the free MyMemory API (no key required). */
-class MyMemoryTranslator implements Translator {
-  // Serialize all requests through a promise chain so we never fire concurrent
-  // calls — the free MyMemory tier returns 429 when hammered in parallel.
-  private queue: Promise<void> = Promise.resolve();
-  // 300 ms between requests keeps us well under the free-tier rate limit.
-  private static readonly DELAY_MS = 300;
-
-  translate(text: string): Promise<string> {
-    const result = this.queue.then(() => this._fetch(text));
-    // Advance the queue: wait for this request, then pause before the next one.
-    this.queue = result
-      .then(() => new Promise<void>(r => setTimeout(r, MyMemoryTranslator.DELAY_MS)))
-      .catch(() => new Promise<void>(r => setTimeout(r, MyMemoryTranslator.DELAY_MS)));
-    return result;
-  }
-
-  private async _fetch(text: string): Promise<string> {
-    const url =
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|es`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`MyMemory HTTP ${res.status}`);
-    const json = await res.json() as { responseData: { translatedText: string } };
-    return json.responseData.translatedText;
+/** Firefox 118+ built-in on-device translator via the WebExtension translations API. */
+class FirefoxTranslator implements Translator {
+  async translate(text: string): Promise<string> {
+    const result = await browser.translations!.translateText({
+      text,
+      fromLanguage: SOURCE_LANG,
+      toLanguage: TARGET_LANG,
+    });
+    return result.translatedText;
   }
 }
 
@@ -96,10 +92,15 @@ export class TranslationPipeline {
       }
     }
 
-    // Fallback: free MyMemory API — works in any browser, no key needed.
-    console.warn('[CVW] Chrome Translation API unavailable — falling back to MyMemory API.');
-    this.translator = new MyMemoryTranslator();
-    return true;
+    // Try Firefox's built-in on-device translations API.
+    if (browser.translations) {
+      console.log('[CVW] Using Firefox built-in Translation API.');
+      this.translator = new FirefoxTranslator();
+      return true;
+    }
+
+    console.warn('[CVW] No built-in translation API available — extension disabled.');
+    return false;
   }
 
   /** Signal from P5 that Phase 2 should activate. */
