@@ -10,19 +10,19 @@ export const StorageKeys = {
 const KNOWN_THRESHOLD = 0.85;
 
 export async function getSettings(): Promise<Settings> {
-  const result = await browser.storage.sync.get(StorageKeys.SETTINGS);
+  const result = await chrome.storage.sync.get(StorageKeys.SETTINGS);
   return (result[StorageKeys.SETTINGS] as Settings) || getDefaultSettings();
 }
 
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
   const current = await getSettings();
-  await browser.storage.sync.set({
+  await chrome.storage.sync.set({
     [StorageKeys.SETTINGS]: { ...current, ...settings },
   });
 }
 
 export async function getVocabulary(): Promise<VocabularyData> {
-  const result = await browser.storage.local.get(StorageKeys.VOCABULARY);
+  const result = await chrome.storage.local.get(StorageKeys.VOCABULARY);
   const wordStats = (result[StorageKeys.VOCABULARY] as Record<string, WordStats>) || {};
   return transformWordStats(wordStats);
 }
