@@ -2,7 +2,8 @@
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@p3/*": ["../P3/src/*"]
+      "@p3/*": ["../P3/src/*"],
+      "@lib/*": ["lib/*"]
     }
   }
 }

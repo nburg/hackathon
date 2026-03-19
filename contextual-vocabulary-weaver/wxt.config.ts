@@ -15,6 +15,10 @@ export default defineConfig({
         // Vite resolves P3's 'compromise' dependency via normal Node module
         // resolution (walks up to ../P3/node_modules automatically).
         '@p3': path.resolve(__dir, '../P3/src'),
+        // Map @lib to the root lib/ directory (P4/P5 shared modules).
+        // Needed because srcDir is 'src', making relative paths from
+        // src/entrypoints/* to root lib/ fragile.
+        '@lib': path.resolve(__dir, 'lib'),
       },
     },
   }),
