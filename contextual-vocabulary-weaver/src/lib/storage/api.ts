@@ -51,7 +51,7 @@ function transformWordStats(wordStats: Record<string, WordStats>): VocabularyDat
 
 function getDefaultSettings(): Settings {
   return {
-    language: 'es',
+    language: 'es' as const,
     density: 5, // 5% default
     enabledSites: [],
     isEnabled: true,

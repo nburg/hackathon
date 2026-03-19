@@ -41,7 +41,7 @@ export default defineContentScript({
     // P2 stores density as 1–10 (percent). Pipeline expects a 0–1 fraction.
     const densityFraction = p2Settings.density / 100;
 
-    const pipeline = new TranslationPipeline();
+    const pipeline = new TranslationPipeline(p2Settings.language);
     const ready = await pipeline.init();
     if (!ready) return;
 

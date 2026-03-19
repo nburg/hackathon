@@ -12,9 +12,14 @@ interface Translator {
  * allows it from extension-level contexts (background, extension pages).
  */
 class BackgroundTranslator implements Translator {
+  constructor(private readonly targetLanguage: string = 'es') {}
+
   async translate(text: string): Promise<string> {
-    const response = await browser.runtime.sendMessage({ type: 'translate', text }) as
-      { translated?: string; error?: string } | undefined;
+    const response = await browser.runtime.sendMessage({
+      type: 'translate',
+      text,
+      targetLanguage: this.targetLanguage,
+    }) as { translated?: string; error?: string } | undefined;
     if (response?.error) throw new Error(response.error);
     if (!response?.translated) throw new Error('Empty translation response from background');
     return response.translated;
@@ -43,6 +48,8 @@ export class TranslationPipeline {
   // Cache query → translation so the same sentence/phrase is never sent twice.
   private readonly cache = new Map<string, string>();
 
+  constructor(private readonly targetLanguage: string = 'es') {}
+
   /**
    * Warms up the translator.
    * Translation is proxied through the background service worker, which has
@@ -50,10 +57,10 @@ export class TranslationPipeline {
    * availability state in the current page context.
    */
   async init(): Promise<boolean> {
-    this.translator = new BackgroundTranslator();
+    this.translator = new BackgroundTranslator(this.targetLanguage);
     // Quick ping to confirm the background translator is ready.
     try {
-      await browser.runtime.sendMessage({ type: 'translate', text: 'test' });
+      await browser.runtime.sendMessage({ type: 'translate', text: 'test', targetLanguage: this.targetLanguage });
     } catch (e) {
       console.warn('[CVW] Background translator not reachable:', e);
       return false;

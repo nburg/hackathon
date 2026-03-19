@@ -124,16 +124,14 @@ export default function App() {
               </label>
               <select
                 value={settings.language}
-                disabled
+                onChange={(e) => handleUpdate({ language: e.target.value as Settings['language'] })}
+                disabled={saving}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
-                <option value="es">🇪🇸 Spanish (Active)</option>
-                <option disabled>🇫🇷 French (Coming Soon)</option>
-                <option disabled>🇩🇪 German (Coming Soon)</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option disabled>German (Coming Soon)</option>
               </select>
-              <p className="text-xs text-gray-500 italic">
-                POC locked to Spanish. Additional languages coming soon!
-              </p>
             </div>
           </Card>
 

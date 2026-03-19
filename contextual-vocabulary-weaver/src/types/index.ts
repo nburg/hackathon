@@ -1,5 +1,5 @@
 export interface Settings {
-  language: 'es'; // Locked to Spanish for POC
+  language: 'es' | 'fr';
   density: number; // 1-10 (percentage)
   enabledSites: string[]; // Array of domains where extension is enabled
   isEnabled: boolean; // Global toggle
