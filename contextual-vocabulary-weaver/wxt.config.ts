@@ -23,7 +23,7 @@ export default defineConfig({
     },
   }),
   runner: {
-    startUrls: ['http://localhost:3000/dashboard.html'],
+    startUrls: ['https://en.wikipedia.org/wiki/Wikipedia'],
   },
   manifest: {
     name: 'Contextual Vocabulary Weaver',
