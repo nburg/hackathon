@@ -9,6 +9,7 @@ export default function App() {
 
   const openOptions = () => chrome.runtime.openOptionsPage();
   const openDashboard = () => chrome.tabs.create({ url: chrome.runtime.getURL('/dashboard.html') });
+  const openSetup = () => chrome.tabs.create({ url: chrome.runtime.getURL('/setup.html') });
 
   // Loading state
   if (settingsLoading || vocabLoading) {
@@ -88,6 +89,9 @@ export default function App() {
         </Button>
         <Button fullWidth variant="secondary" onClick={openOptions}>
           Settings
+        </Button>
+        <Button fullWidth variant="secondary" onClick={openSetup}>
+          Setup Guide
         </Button>
       </div>
     </div>
