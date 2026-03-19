@@ -237,3 +237,90 @@ export const MIN_PKNOWN = 0.1;
  * Maximum probability for pKnown (ceiling value)
  */
 export const MAX_PKNOWN = 0.95;
+
+/**
+ * Most common English words ordered by frequency (most frequent first).
+ *
+ * Used to give unseen words a variable starting priority: common words get
+ * priority closer to 1.0, uncommon words closer to 0.5. Words not in this
+ * list are treated as uncommon and receive a flat 0.5 starting priority.
+ */
+export const COMMON_ENGLISH_WORDS: readonly string[] = [
+  'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'it',
+  'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this',
+  'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or',
+  'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what',
+  'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me',
+  'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know',
+  'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could',
+  'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come',
+  'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how',
+  'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because',
+  'any', 'these', 'give', 'day', 'most', 'us', 'great', 'between', 'need',
+  'large', 'often', 'hand', 'high', 'place', 'hold', 'turn', 'help',
+  'start', 'city', 'play', 'small', 'number', 'off', 'always', 'move',
+  'live', 'try', 'point', 'real', 'world', 'life', 'few', 'north',
+  'open', 'seem', 'together', 'next', 'white', 'children', 'begin',
+  'walk', 'example', 'paper', 'group', 'music', 'those', 'both', 'book',
+  'letter', 'until', 'mile', 'river', 'car', 'feet', 'care', 'second',
+  'enough', 'eat', 'face', 'watch', 'far', 'really', 'almost', 'let',
+  'above', 'girl', 'sometimes', 'mountain', 'cut', 'young', 'talk', 'soon',
+  'list', 'song', 'leave', 'family', 'body', 'color', 'stand', 'sun',
+  'fish', 'area', 'dog', 'horse', 'problem', 'complete', 'room', 'since',
+  'ever', 'piece', 'usually', 'friends', 'easy', 'heard', 'order', 'red',
+  'door', 'sure', 'become', 'top', 'ship', 'across', 'today', 'during',
+  'short', 'better', 'best', 'however', 'low', 'hours', 'black', 'happened',
+  'whole', 'measure', 'remember', 'early', 'waves', 'listen', 'wind',
+  'rock', 'space', 'fast', 'several', 'himself', 'toward', 'five', 'step',
+  'morning', 'true', 'hundred', 'against', 'pattern', 'table', 'slowly',
+  'money', 'map', 'farm', 'draw', 'voice', 'seen', 'cold', 'plan',
+  'notice', 'south', 'sing', 'war', 'ground', 'fall', 'king', 'town',
+  'unit', 'figure', 'certain', 'field', 'travel', 'wood', 'fire', 'done',
+  'road', 'half', 'ten', 'fly', 'box', 'finally', 'wait', 'correct',
+  'quickly', 'person', 'shown', 'minutes', 'strong', 'stars', 'front',
+  'feel', 'fact', 'street', 'contain', 'course', 'surface', 'produce',
+  'building', 'ocean', 'class', 'note', 'nothing', 'rest', 'carefully',
+  'inside', 'stay', 'green', 'known', 'island', 'week', 'less', 'machine',
+  'base', 'ago', 'stood', 'plane', 'system', 'behind', 'ran', 'round',
+  'boat', 'game', 'force', 'brought', 'understand', 'warm', 'common',
+  'bring', 'explain', 'dry', 'though', 'language', 'shape', 'deep',
+  'thousands', 'yes', 'clear', 'yet', 'government', 'filled', 'heat',
+  'full', 'hot', 'check', 'object', 'rule', 'among', 'power', 'able',
+  'six', 'size', 'dark', 'ball', 'material', 'special', 'heavy', 'fine',
+  'pair', 'circle', 'include', 'built', 'matter', 'square', 'perhaps',
+  'felt', 'suddenly', 'test', 'direction', 'center', 'ready', 'anything',
+  'general', 'energy', 'subject', 'moon', 'region', 'return', 'believe',
+  'dance', 'members', 'simple', 'paint', 'mind', 'love', 'cause', 'rain',
+  'train', 'blue', 'wish', 'drop', 'window', 'difference', 'distance',
+  'heart', 'sit', 'summer', 'wall', 'forest', 'probably', 'sat', 'main',
+  'winter', 'wide', 'written', 'length', 'reason', 'kept', 'interest',
+  'arms', 'brother', 'race', 'present', 'beautiful', 'store', 'job',
+  'edge', 'past', 'sign', 'record', 'wild', 'happy', 'gone', 'sky',
+  'glass', 'million', 'west', 'lay', 'weather', 'root', 'meet', 'third',
+  'months', 'raised', 'soft', 'whether', 'clothes', 'flowers', 'teacher',
+  'held', 'describe', 'drive', 'cross', 'speak', 'solve', 'appear',
+  'metal', 'son', 'either', 'ice', 'sleep', 'village', 'result', 'snow',
+  'ride', 'floor', 'hill', 'baby', 'buy', 'century', 'outside', 'everything',
+  'tall', 'already', 'instead', 'soil', 'bed', 'copy', 'free', 'hope',
+  'spring', 'case', 'nation', 'quite', 'type', 'themselves', 'temperature',
+  'bright', 'lead', 'everyone', 'method', 'section', 'lake', 'within',
+  'hair', 'age', 'amount', 'scale', 'although', 'broken', 'moment',
+  'tiny', 'possible', 'gold', 'milk', 'quiet', 'natural', 'lot', 'stone',
+  'act', 'build', 'middle', 'speed', 'count', 'cat', 'someone', 'sail',
+  'bear', 'wonder', 'bottom', 'trip', 'hole', 'poor', 'fight', 'surprise',
+  'died', 'beat', 'exactly', 'remain', 'dress', 'iron', 'fingers', 'row',
+  'least', 'catch', 'wrote', 'shouted', 'continued', 'itself', 'else',
+  'gas', 'burning', 'design', 'foot', 'law', 'ears', 'grew', 'skin',
+  'valley', 'key', 'president', 'brown', 'trouble', 'cool', 'cloud',
+  'lost', 'sent', 'wear', 'bad', 'save', 'experiment', 'engine', 'alone',
+  'drawing', 'east', 'pay', 'single', 'touch', 'information', 'mouth',
+  'yard', 'equal', 'decimal',
+];
+
+/**
+ * Precomputed rank map: word → 0-based index in COMMON_ENGLISH_WORDS.
+ * Words with a lower rank number are more common.
+ */
+export const ENGLISH_WORD_RANK: ReadonlyMap<string, number> = new Map(
+  COMMON_ENGLISH_WORDS.map((w, i) => [w, i])
+);

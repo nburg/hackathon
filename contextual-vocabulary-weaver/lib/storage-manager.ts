@@ -18,6 +18,8 @@ import {
   KNOWN_THRESHOLD,
   MIN_PKNOWN,
   MAX_PKNOWN,
+  COMMON_ENGLISH_WORDS,
+  ENGLISH_WORD_RANK,
 } from './constants';
 
 // ============================================================================
@@ -244,11 +246,22 @@ export function calculatePKnown(
  * @param word - The word to calculate priority for
  * @returns Priority score (0.0 - 1.0), higher = more important to show
  */
+/**
+ * Map an unseen word's English frequency rank to a starting priority in [0.5, 1.0].
+ * Rank 0 (most common) → 1.0; last rank (least common in list) → 0.5.
+ * Words not in the frequency list → 0.5.
+ */
+function frequencyPriority(word: string): number {
+  const rank = ENGLISH_WORD_RANK.get(word.toLowerCase());
+  if (rank === undefined) return 0.5;
+  return 1.0 - (rank / (COMMON_ENGLISH_WORDS.length - 1)) * 0.5;
+}
+
 export async function getWordPriority(word: string): Promise<number> {
   const stats = await getWordStats(word);
 
-  // Case 1: New word (never tracked) - HIGH priority
-  if (!stats) return 1.0;
+  // Case 1: New word (never tracked) - priority varies by how common it is
+  if (!stats) return frequencyPriority(word);
 
   // Case 2: Known word (mastered) - LOW priority
   if (stats.pKnown >= KNOWN_THRESHOLD) return 0.1;
