@@ -1,9 +1,13 @@
 import type { Settings, VocabularyData } from '@/types';
+import type { WordStats } from '@lib/types';
 
 export const StorageKeys = {
   SETTINGS: 'cvw_settings',
-  VOCABULARY: 'cvw_vocabulary',
+  // Read vocabulary from P5's key — the SRS engine writes here.
+  VOCABULARY: 'word_stats',
 } as const;
+
+const KNOWN_THRESHOLD = 0.85;
 
 export async function getSettings(): Promise<Settings> {
   const result = await chrome.storage.sync.get(StorageKeys.SETTINGS);
@@ -19,10 +23,29 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
 
 export async function getVocabulary(): Promise<VocabularyData> {
   const result = await chrome.storage.local.get(StorageKeys.VOCABULARY);
-  return result[StorageKeys.VOCABULARY] || {
-    words: {},
-    totalTracked: 0,
-    wordsKnown: 0
+  const wordStats: Record<string, WordStats> = result[StorageKeys.VOCABULARY] || {};
+  return transformWordStats(wordStats);
+}
+
+function transformWordStats(wordStats: Record<string, WordStats>): VocabularyData {
+  const words = Object.fromEntries(
+    Object.entries(wordStats).map(([key, s]) => [
+      key,
+      {
+        word: s.word,
+        translation: '', // P5 doesn't store the translation; shown blank in dashboard
+        exposureCount: s.exposureCount,
+        lastSeen: s.lastSeen,
+        recallFailures: s.recallFailures,
+        pKnown: s.pKnown,
+      },
+    ])
+  );
+  const statsArray = Object.values(wordStats);
+  return {
+    words,
+    totalTracked: statsArray.length,
+    wordsKnown: statsArray.filter((s) => s.pKnown >= KNOWN_THRESHOLD).length,
   };
 }
 
