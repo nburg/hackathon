@@ -4,10 +4,36 @@ import { getWordPriority, trackExposure, trackRecallFailure } from './index';
 
 // ---------------------------------------------------------------------------
 // Ambient types for Chrome's built-in Translation API
-// (not yet in @types/chrome — remove once official types ship)
+// Three API shapes across Chrome versions (none yet in @types/chrome):
+//
+//   Chrome 138+  — window.Translator (standalone global, no flags needed)
+//     Translator.availability({ sourceLanguage, targetLanguage })
+//     Translator.create({ sourceLanguage, targetLanguage })
+//
+//   Chrome 131–137 — window.ai.translator (flag: #translation-api)
+//     window.ai.translator.availability(...)
+//     window.ai.translator.create(...)
+//
+//   Chrome 122–130 — window.translation (origin-trial)
+//     window.translation.canTranslate(...)
+//     window.translation.createTranslator(...)
 // ---------------------------------------------------------------------------
 declare global {
+  // Chrome 138+: standalone Translator global
+  const Translator: undefined | {
+    availability(options: TranslatorOptions): Promise<'unavailable' | 'downloadable' | 'downloading' | 'available'>;
+    create(options: TranslatorOptions): Promise<Translator>;
+  };
+
   interface Window {
+    // Chrome 131–137
+    ai?: {
+      translator?: {
+        availability(options: TranslatorOptions): Promise<'unavailable' | 'downloadable' | 'downloading' | 'available'>;
+        create(options: TranslatorOptions): Promise<Translator>;
+      };
+    };
+    // Chrome 122–130
     translation?: {
       canTranslate(options: TranslatorOptions): Promise<'readily' | 'after-download' | 'no'>;
       createTranslator(options: TranslatorOptions): Promise<Translator>;
@@ -78,28 +104,62 @@ export class TranslationPipeline {
    * Returns false if the API is not supported in this browser.
    */
   async init(): Promise<boolean> {
-    // Try Chrome's built-in Translation API first.
-    if (window.translation) {
-      const availability = await window.translation.canTranslate({
-        sourceLanguage: SOURCE_LANG,
-        targetLanguage: TARGET_LANG,
-      });
-
-      if (availability !== 'no') {
-        // 'after-download': model downloads on first translate() call — acceptable.
-        this.translator = await window.translation.createTranslator({
-          sourceLanguage: SOURCE_LANG,
-          targetLanguage: TARGET_LANG,
+    // 1. Chrome 138+ — window.Translator standalone global (no flags needed).
+    if (typeof Translator !== 'undefined') {
+      try {
+        const availability = await Translator.availability({
+          sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
         });
-        console.log('[CVW] Using Chrome built-in Translation API.');
-        return true;
+        if (availability !== 'unavailable') {
+          this.translator = await Translator.create({
+            sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
+          });
+          console.log('[CVW] Using window.Translator (Chrome 138+).');
+          return true;
+        }
+      } catch (e) {
+        console.warn('[CVW] window.Translator failed:', e);
       }
     }
 
-    // Fallback: free MyMemory API — works in any browser, no key needed.
-    console.warn('[CVW] Chrome Translation API unavailable — falling back to MyMemory API.');
-    this.translator = new MyMemoryTranslator();
-    return true;
+    // 2. Chrome 131–137 — window.ai.translator (requires #translation-api flag).
+    if (window.ai?.translator) {
+      try {
+        const availability = await window.ai.translator.availability({
+          sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
+        });
+        if (availability !== 'unavailable') {
+          this.translator = await window.ai.translator.create({
+            sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
+          });
+          console.log('[CVW] Using window.ai.translator (Chrome 131–137).');
+          return true;
+        }
+      } catch (e) {
+        console.warn('[CVW] window.ai.translator failed:', e);
+      }
+    }
+
+    // 3. Chrome 122–130 — window.translation (origin-trial).
+    if (window.translation) {
+      try {
+        const availability = await window.translation.canTranslate({
+          sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
+        });
+        if (availability !== 'no') {
+          this.translator = await window.translation.createTranslator({
+            sourceLanguage: SOURCE_LANG, targetLanguage: TARGET_LANG,
+          });
+          console.log('[CVW] Using window.translation (Chrome 122–130).');
+          return true;
+        }
+      } catch (e) {
+        console.warn('[CVW] window.translation failed:', e);
+      }
+    }
+
+    console.warn('[CVW] No Chrome Translation API available — extension disabled.');
+    return false;
   }
 
   /** Signal from P5 that Phase 2 should activate. */
