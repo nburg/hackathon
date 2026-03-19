@@ -5,6 +5,7 @@ import {
   DEFAULT_SETTINGS,
   type ExtensionSettings
 } from '../lib/types';
+import { checkAndTriggerPhase2 } from '../lib';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -45,6 +46,11 @@ export default defineContentScript({
     // Run translation pipeline with density from P2's settings.
     // Tracking (exposure + recall) is handled inside the pipeline via P5's storage API.
     await pipeline.run(settings.density);
+
+    // After this page's exposures are tracked, check whether the BKT threshold
+    // has been crossed. If so, checkAndTriggerPhase2 writes currentPhase: 2 to
+    // storage, which the onChanged listener above picks up to activate Phase 2.
+    checkAndTriggerPhase2().catch(() => {});
 
     console.log('[CVW] Translation pipeline completed');
   },
