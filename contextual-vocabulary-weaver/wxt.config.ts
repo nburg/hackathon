@@ -22,6 +22,9 @@ export default defineConfig({
       },
     },
   }),
+  runner: {
+    startUrls: ['http://localhost:3000/dashboard.html'],
+  },
   manifest: {
     name: 'Contextual Vocabulary Weaver',
     version: '0.1.0',
