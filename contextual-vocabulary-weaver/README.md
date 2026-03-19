@@ -3,7 +3,7 @@
 ## Initial Setup
 
 1. Clone the repository:
-   `git clone <repo-url>`
+   `git clone https://github.com/nburg/hackathon`
 2. Navigate into the directory:
    `cd contextual-vocabulary-weaver`
 3. Install dependencies:
