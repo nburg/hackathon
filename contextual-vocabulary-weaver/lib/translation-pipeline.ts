@@ -4,22 +4,10 @@ import { getWordPriority, trackExposure, trackRecallFailure } from './index';
 
 // ---------------------------------------------------------------------------
 // Ambient types for Chrome's built-in Translation API
-// Two API shapes exist depending on Chrome version:
-//   New (Chrome 131+, flag: chrome://flags/#translation-api):
-//     window.ai.translator.create({ sourceLanguage, targetLanguage })
-//   Old (origin-trial era, ~Chrome 122–130):
-//     window.translation.createTranslator({ sourceLanguage, targetLanguage })
+// (not yet in @types/chrome — remove once official types ship)
 // ---------------------------------------------------------------------------
 declare global {
   interface Window {
-    // New API: window.ai.translator (Chrome 131+)
-    ai?: {
-      translator?: {
-        availability(options: TranslatorOptions): Promise<'unavailable' | 'downloadable' | 'downloading' | 'available'>;
-        create(options: TranslatorOptions): Promise<Translator>;
-      };
-    };
-    // Old API: window.translation (origin-trial era)
     translation?: {
       canTranslate(options: TranslatorOptions): Promise<'readily' | 'after-download' | 'no'>;
       createTranslator(options: TranslatorOptions): Promise<Translator>;
@@ -56,51 +44,29 @@ const TARGET_LANG = 'es';
 export class TranslationPipeline {
   private translator: Translator | null = null;
   private phase2Active = false;
+  // Cache query → translation so the same sentence/phrase is never sent twice.
+  private readonly cache = new Map<string, string>();
 
   /**
    * Checks API availability and warms up the translator.
    * Returns false if the API is not supported in this browser.
    */
   async init(): Promise<boolean> {
-    // 1. Try the new Chrome AI Translator API (Chrome 131+).
-    //    Requires chrome://flags/#translation-api to be enabled.
-    if (window.ai?.translator) {
-      try {
-        const availability = await window.ai.translator.availability({
-          sourceLanguage: SOURCE_LANG,
-          targetLanguage: TARGET_LANG,
-        });
-        if (availability !== 'unavailable') {
-          // 'downloadable'/'downloading': model fetches on first translate() — acceptable.
-          this.translator = await window.ai.translator.create({
-            sourceLanguage: SOURCE_LANG,
-            targetLanguage: TARGET_LANG,
-          });
-          console.log('[CVW] Using Chrome built-in AI Translator (new API).');
-          return true;
-        }
-      } catch (e) {
-        console.warn('[CVW] window.ai.translator failed:', e);
-      }
-    }
-
-    // 2. Try the old origin-trial Chrome Translation API (Chrome 122–130).
+    // Try Chrome's built-in Translation API first.
     if (window.translation) {
-      try {
-        const availability = await window.translation.canTranslate({
+      const availability = await window.translation.canTranslate({
+        sourceLanguage: SOURCE_LANG,
+        targetLanguage: TARGET_LANG,
+      });
+
+      if (availability !== 'no') {
+        // 'after-download': model downloads on first translate() call — acceptable.
+        this.translator = await window.translation.createTranslator({
           sourceLanguage: SOURCE_LANG,
           targetLanguage: TARGET_LANG,
         });
-        if (availability !== 'no') {
-          this.translator = await window.translation.createTranslator({
-            sourceLanguage: SOURCE_LANG,
-            targetLanguage: TARGET_LANG,
-          });
-          console.log('[CVW] Using Chrome built-in Translation API (legacy API).');
-          return true;
-        }
-      } catch (e) {
-        console.warn('[CVW] window.translation failed:', e);
+        console.log('[CVW] Using Chrome built-in Translation API.');
+        return true;
       }
     }
 
@@ -241,14 +207,21 @@ export class TranslationPipeline {
     }
 
     try {
-      const translated = await this.translator!.translate(query);
+      const cached = this.cache.get(query);
+      const translated = cached ?? await this.translator!.translate(query);
+      if (!cached) this.cache.set(query, translated);
       const match = translated.match(/\[\[(.+?)\]\]/);
       if (match?.[1]) return match[1].trim();
     } catch {
       // fall through to bare-word fallback
     }
 
-    return this.translator!.translate(candidate.word);
+    const wordQuery = candidate.word;
+    const cachedWord = this.cache.get(wordQuery);
+    if (cachedWord) return cachedWord;
+    const wordTranslation = await this.translator!.translate(wordQuery);
+    this.cache.set(wordQuery, wordTranslation);
+    return wordTranslation;
   }
 
   private async translateGroup(candidates: WordCandidate[]): Promise<void> {
