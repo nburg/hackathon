@@ -29,9 +29,6 @@ export default defineContentScript({
       }
     });
 
-    // TODO(P5): wire in getWordPriority() from the SRS engine
-    // const getPriority = (word: string) => storageEngine.getWordPriority(word);
-
     await pipeline.run(settings.density);
   },
 });

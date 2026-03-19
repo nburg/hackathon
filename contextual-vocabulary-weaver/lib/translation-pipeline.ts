@@ -1,5 +1,6 @@
 import { extractCandidates, filterCandidates, getSentenceForCandidate } from '../../P3/src/index';
 import type { WordCandidate } from '../../P3/src/types';
+import { getWordPriority, trackExposure, trackRecallFailure } from './index';
 
 // ---------------------------------------------------------------------------
 // Ambient types for Chrome's built-in Translation API
@@ -83,16 +84,12 @@ export class TranslationPipeline {
 
   /**
    * Main entry point. Extracts candidates from the live document via P3,
-   * filters by density + priority, translates each one, and swaps them
-   * in-place in the DOM.
+   * scores and ranks them with P5's SRS priority, translates the top N% by
+   * density, and swaps them in-place in the DOM.
    *
    * @param densityFraction  0.01–0.10, sourced from P2's settings slider
-   * @param getPriority      Word priority scorer from P5's `getWordPriority()`
    */
-  async run(
-    densityFraction: number,
-    getPriority: (word: string) => number = () => 1,
-  ): Promise<void> {
+  async run(densityFraction: number): Promise<void> {
     if (!this.translator) {
       console.warn('[CVW] Call init() before run().');
       return;
@@ -106,16 +103,22 @@ export class TranslationPipeline {
     // P3 extracts all candidates from the live document.
     const allCandidates = extractCandidates(document);
 
-    // Filter: skip proper nouns and multi-word expressions, then apply
-    // density by sorting on P5's priority score and taking the top N%.
+    // Filter: skip proper nouns and multi-word expressions.
     const eligible = filterCandidates(
       allCandidates,
       (c) => !c.isProperNoun && !c.isMultiWord,
     );
 
-    const sorted = eligible.sort((a, b) => getPriority(b.word) - getPriority(a.word));
-    const count = Math.max(1, Math.round(sorted.length * densityFraction));
-    const selected = sorted.slice(0, count);
+    // Fetch all P5 priority scores in parallel (getWordPriority is async).
+    const scores = await Promise.all(eligible.map((c) => getWordPriority(c.word)));
+
+    // Sort by priority descending and take the top density% of candidates.
+    const ranked = eligible
+      .map((c, i) => ({ candidate: c, score: scores[i] }))
+      .sort((a, b) => b.score - a.score);
+
+    const count = Math.max(1, Math.round(ranked.length * densityFraction));
+    const selected = ranked.slice(0, count).map(({ candidate }) => candidate);
 
     // Group by text node and process each group concurrently.
     // Within a group, replace right-to-left so earlier offsets stay valid.
@@ -140,6 +143,8 @@ export class TranslationPipeline {
       try {
         const translated = await this.translator!.translate(candidate.word);
         replaceInDom(candidate, translated);
+        // Fire-and-forget: tell P5 this word was exposed on the page.
+        trackExposure(candidate.word).catch(() => {});
       } catch (err) {
         console.error(`[CVW] Translation failed for "${candidate.word}":`, err);
       }
@@ -196,7 +201,11 @@ function createWordSpan(original: string, translation: string): HTMLSpanElement 
   span.textContent = translation;
   span.title = original; // fallback tooltip
 
-  span.addEventListener('mouseenter', () => { span.textContent = original; });
+  span.addEventListener('mouseenter', () => {
+    span.textContent = original;
+    // Fire-and-forget: hovering to see the original counts as a recall failure.
+    trackRecallFailure(original).catch(() => {});
+  });
   span.addEventListener('mouseleave', () => { span.textContent = translation; });
 
   return span;
