@@ -2,8 +2,11 @@ import { defineConfig } from 'wxt';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 const __dir = fileURLToPath(new URL('.', import.meta.url));
+const chromeProfile = path.resolve(__dir, '.chrome-profile');
+fs.mkdirSync(chromeProfile, { recursive: true });
 
 export default defineConfig({
   srcDir: 'src',
@@ -25,7 +28,7 @@ export default defineConfig({
   runner: {
     // Persist the Chrome profile across runs so flags, downloaded language
     // models, and extension settings survive restarts.
-    chromiumProfile: path.resolve(__dir, '.chrome-profile'),
+    chromiumProfile: chromeProfile,
     keepProfileChanges: true,
   },
   manifest: {
