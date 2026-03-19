@@ -11,7 +11,7 @@ const KNOWN_THRESHOLD = 0.85;
 
 export async function getSettings(): Promise<Settings> {
   const result = await chrome.storage.sync.get(StorageKeys.SETTINGS);
-  return result[StorageKeys.SETTINGS] || getDefaultSettings();
+  return (result[StorageKeys.SETTINGS] as Settings) || getDefaultSettings();
 }
 
 export async function saveSettings(settings: Partial<Settings>): Promise<void> {
@@ -23,7 +23,7 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
 
 export async function getVocabulary(): Promise<VocabularyData> {
   const result = await chrome.storage.local.get(StorageKeys.VOCABULARY);
-  const wordStats: Record<string, WordStats> = result[StorageKeys.VOCABULARY] || {};
+  const wordStats = (result[StorageKeys.VOCABULARY] as Record<string, WordStats>) || {};
   return transformWordStats(wordStats);
 }
 
