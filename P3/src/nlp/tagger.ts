@@ -5,6 +5,12 @@ import { PartOfSpeech, NLPConfig } from '../types.js';
  * Maps compromise.js tags to our simplified POS types
  */
 function mapCompromiseTag(tags: string[]): PartOfSpeech {
+  // Pronoun must be checked before Noun/Plural: compromise gives plural pronouns
+  // (they, them, those, etc.) both a 'Pronoun' tag and a 'Plural' tag.
+  // Without this, "they/them" would be mis-classified as Noun and sent for translation.
+  if (tags.includes('Pronoun')) {
+    return 'Pronoun';
+  }
   if (tags.includes('Noun') || tags.includes('Singular') || tags.includes('Plural')) {
     return 'Noun';
   }
@@ -16,9 +22,6 @@ function mapCompromiseTag(tags: string[]): PartOfSpeech {
   }
   if (tags.includes('Adverb')) {
     return 'Adverb';
-  }
-  if (tags.includes('Pronoun')) {
-    return 'Pronoun';
   }
   if (tags.includes('Preposition')) {
     return 'Preposition';

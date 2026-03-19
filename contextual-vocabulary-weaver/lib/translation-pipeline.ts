@@ -187,13 +187,56 @@ export class TranslationPipeline {
     }
   }
 
+  /**
+   * Translates a word using its POS and sentence context (from compromise via P3)
+   * to avoid wrong-part-of-speech errors like "can" → "bote" instead of "poder".
+   *
+   * Strategy:
+   *  1. Wrap the word in [[markers]] inside its actual sentence and translate the
+   *     whole phrase — the API returns contextually correct output and the markers
+   *     survive so we can extract just the translated word.
+   *  2. If no sentence is available, fall back to a short POS-specific phrase
+   *     ("I [[can]]" for verbs, "The [[can]]" for nouns, etc.).
+   *  3. If the markers are stripped or translation throws, translate the bare word.
+   */
+  private async translateWithContext(candidate: WordCandidate): Promise<string> {
+    let query: string;
+
+    const sentence = getSentenceForCandidate(candidate);
+    if (sentence) {
+      const sentenceStart = candidate.node.data.indexOf(sentence);
+      if (sentenceStart !== -1) {
+        const wordOffsetInSentence = candidate.offset - sentenceStart;
+        const before = sentence.slice(0, wordOffsetInSentence);
+        const after = sentence.slice(wordOffsetInSentence + candidate.length);
+        query = `${before}[[${candidate.word}]]${after}`;
+      } else {
+        query = buildPOSQuery(candidate.word, candidate.pos);
+      }
+    } else {
+      query = buildPOSQuery(candidate.word, candidate.pos);
+    }
+
+    try {
+      const translated = await this.translator!.translate(query);
+      const match = translated.match(/\[\[(.+?)\]\]/);
+      if (match?.[1]) return match[1].trim();
+    } catch {
+      // fall through to bare-word fallback
+    }
+
+    return this.translator!.translate(candidate.word);
+  }
+
   private async translateGroup(candidates: WordCandidate[]): Promise<void> {
     // Descending offset order: replace rightmost words first to preserve offsets.
     const sorted = [...candidates].sort((a, b) => b.offset - a.offset);
 
     for (const candidate of sorted) {
       try {
-        const translated = await this.translator!.translate(candidate.word);
+        const translated = await this.translateWithContext(candidate);
+        // Skip if the API returned the original word unchanged (translation failed silently).
+        if (translated.toLowerCase() === candidate.word.toLowerCase()) continue;
         replaceInDom(candidate, translated);
         // Fire-and-forget: tell P5 this word was exposed on the page.
         trackExposure(candidate.word).catch(() => {});
@@ -207,6 +250,26 @@ export class TranslationPipeline {
 // ---------------------------------------------------------------------------
 // DOM helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Builds a short, unambiguous phrase for translating a word in isolation.
+ * Uses the POS tag produced by compromise (via P3) to pick a syntactic frame
+ * that forces the translation API toward the correct meaning.
+ *
+ * Examples:
+ *   Verb "can"  → "I [[can]]"        → "Yo [[puedo]]"  → "puedo"
+ *   Noun "can"  → "The [[can]]"      → "La [[lata]]"   → "lata"
+ *   Adj  "fast" → "It is [[fast]]"   → "Es [[rápido]]" → "rápido"
+ */
+function buildPOSQuery(word: string, pos: string): string {
+  switch (pos) {
+    case 'Verb':      return `I [[${word}]]`;
+    case 'Noun':      return `The [[${word}]]`;
+    case 'Adjective': return `It is [[${word}]]`;
+    case 'Adverb':    return `I do it [[${word}]]`;
+    default:          return `[[${word}]]`;
+  }
+}
 
 function groupByNode(candidates: WordCandidate[]): Map<Text, WordCandidate[]> {
   const map = new Map<Text, WordCandidate[]>();
