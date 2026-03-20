@@ -26,7 +26,7 @@ export function WordCard({ word }: WordCardProps) {
           {Math.round(word.pKnown * 100)}% known
         </span>
       </div>
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-gray-600">
         <span>Seen {word.exposureCount} times</span>
         <span>Last: {lastSeenText}</span>
       </div>

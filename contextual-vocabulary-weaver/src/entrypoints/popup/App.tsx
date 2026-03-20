@@ -104,7 +104,7 @@ export default function App() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-blue-600">🌟 Vocabulary Weaver</h2>
-          <p className="text-xs text-gray-500">Learn {languageLabel} passively!</p>
+          <p className="text-xs text-gray-600">Learn {languageLabel} passively!</p>
         </div>
         <Toggle
           enabled={settings.isEnabled}

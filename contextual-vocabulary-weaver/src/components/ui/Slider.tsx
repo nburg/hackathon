@@ -25,14 +25,20 @@ export function Slider({
       </label>
       <input
         type="range"
+        role="slider"
+        aria-label={label}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={value}
+        aria-valuetext={`${value} percent`}
         min={min}
         max={max}
         value={value}
         onChange={(e) => onValueChange(Number(e.target.value))}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         {...props}
       />
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
+      {helperText && <p className="text-xs text-gray-600">{helperText}</p>}
     </div>
   );
 }

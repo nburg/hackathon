@@ -11,15 +11,25 @@ export function Spinner({ size = 'medium', className = '' }: SpinnerProps) {
   };
 
   return (
-    <div className={`inline-block ${sizeClasses[size]} ${className}`}>
+    <div
+      role="status"
+      aria-label="Loading"
+      className={`inline-block ${sizeClasses[size]} ${className}`}
+    >
       <div className="w-full h-full border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
+      <span className="sr-only">Loading...</span>
     </div>
   );
 }
 
 export function LoadingScreen({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label={message}
+      className="min-h-screen bg-gray-50 flex flex-col items-center justify-center"
+    >
       <Spinner size="large" />
       <p className="mt-4 text-gray-600">{message}</p>
     </div>
