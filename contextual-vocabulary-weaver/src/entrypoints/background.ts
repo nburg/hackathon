@@ -65,6 +65,16 @@ export default defineBackground(() => {
   // Warm up the translator on startup so the first page load isn't slow.
   getTranslator();
 
+  // Show a badge when Phase 2 activates so the transition is visible to the user.
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    const updated = changes['settings']?.newValue as { currentPhase?: number } | undefined;
+    if (updated?.currentPhase === 2) {
+      browser.action.setBadgeText({ text: '2' });
+      browser.action.setBadgeBackgroundColor({ color: '#7c3aed' });
+    }
+  });
+
   // Content scripts can't access Translator directly — proxy through here.
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
     if (

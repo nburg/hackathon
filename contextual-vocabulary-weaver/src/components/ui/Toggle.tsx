@@ -2,9 +2,10 @@ interface ToggleProps {
   enabled: boolean;
   onChange: (enabled: boolean) => void;
   label?: string;
+  'aria-label'?: string;
 }
 
-export function Toggle({ enabled, onChange, label }: ToggleProps) {
+export function Toggle({ enabled, onChange, label, 'aria-label': ariaLabel }: ToggleProps) {
   return (
     <label className="flex items-center cursor-pointer">
       <div className="relative">
@@ -13,6 +14,7 @@ export function Toggle({ enabled, onChange, label }: ToggleProps) {
           className="sr-only"
           checked={enabled}
           onChange={(e) => onChange(e.target.checked)}
+          aria-label={ariaLabel}
         />
         <div
           className={`block w-14 h-8 rounded-full transition ${enabled ? 'bg-blue-600' : 'bg-gray-300'}`}

@@ -140,12 +140,12 @@ export default function App() {
           {/* Density Slider */}
           <Card title="Word Replacement Density">
             <Slider
-              label={`Replacement Rate (${getDensityLabel(settings.density)})`}
+              label={`Replacement Rate — ${settings.density}% of words replaced (${getDensityLabel(settings.density)})`}
               value={settings.density}
               onValueChange={(value) => handleUpdate({ density: value })}
               min={1}
               max={10}
-              helperText="1% = Few words for beginners | 10% = Many words for advanced learners"
+              helperText={`${settings.density}% of content words on each page will be swapped into ${settings.language === 'es' ? 'Spanish' : settings.language}`}
               disabled={saving}
             />
           </Card>
