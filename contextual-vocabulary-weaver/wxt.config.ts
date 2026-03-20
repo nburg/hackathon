@@ -25,7 +25,7 @@ export default defineConfig({
       },
     },
   }),
-  runner: {
+  webExt: {
     // Persist the Chrome profile across runs so flags, downloaded language
     // models, and extension settings survive restarts.
     chromiumProfile: chromeProfile,
@@ -34,7 +34,7 @@ export default defineConfig({
   manifest: {
     name: 'Contextual Vocabulary Weaver',
     version: '0.1.0',
-    permissions: ['storage', 'activeTab', 'scripting', 'tabs'],
+    permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['<all_urls>'],
     action: {},
     content_scripts: [

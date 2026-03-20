@@ -47,9 +47,7 @@ export async function getSettings(): Promise<ExtensionSettings> {
  *
  * @param newSettings - Partial settings to update (like UPDATE with specific columns)
  */
-export async function updateSettings(
-  newSettings: Partial<ExtensionSettings>
-): Promise<void> {
+export async function updateSettings(newSettings: Partial<ExtensionSettings>): Promise<void> {
   const currentSettings = await getSettings();
 
   // Merge with existing settings (like UPDATE with defaults for unchanged columns)
@@ -212,10 +210,7 @@ export async function trackRecallFailure(word: string): Promise<void> {
  * @param recallFailures - Number of times user hovered (forgot the word)
  * @returns Probability between 0.1 and 0.95
  */
-export function calculatePKnown(
-  exposureCount: number,
-  recallFailures: number
-): number {
+export function calculatePKnown(exposureCount: number, recallFailures: number): number {
   // Handle edge case: never exposed (like NULL handling)
   if (exposureCount === 0) return 0.0;
 
@@ -301,9 +296,7 @@ export async function getLearningSummary() {
   return {
     totalWords: statsArray.length,
     knownWords: statsArray.filter((s) => s.pKnown >= KNOWN_THRESHOLD).length,
-    learningWords: statsArray.filter(
-      (s) => s.pKnown >= 0.3 && s.pKnown < KNOWN_THRESHOLD
-    ).length,
+    learningWords: statsArray.filter((s) => s.pKnown >= 0.3 && s.pKnown < KNOWN_THRESHOLD).length,
     newWords: statsArray.filter((s) => s.pKnown < 0.3).length,
   };
 }
@@ -422,10 +415,7 @@ export async function clearAllData(): Promise<void> {
  * @returns Complete storage snapshot
  */
 export async function exportData(): Promise<StorageSchema> {
-  const [wordStats, settings] = await Promise.all([
-    getAllWordStats(),
-    getSettings(),
-  ]);
+  const [wordStats, settings] = await Promise.all([getAllWordStats(), getSettings()]);
 
   return {
     word_stats: wordStats,
