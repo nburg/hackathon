@@ -12,11 +12,27 @@ interface Translator {
  * allows it from extension-level contexts (background, extension pages).
  */
 class BackgroundTranslator implements Translator {
+  private static loggedApiSource = false;
+
   async translate(text: string): Promise<string> {
     const response = await browser.runtime.sendMessage({ type: 'translate', text }) as
       { translated?: string; error?: string } | undefined;
-    if (response?.error) throw new Error(response.error);
+
+    if (response?.error) {
+      if (!BackgroundTranslator.loggedApiSource) {
+        console.log('[CVW] ❌ Chrome Translator API unavailable - would fall back to MyMemory (not implemented in current code)');
+        BackgroundTranslator.loggedApiSource = true;
+      }
+      throw new Error(response.error);
+    }
+
     if (!response?.translated) throw new Error('Empty translation response from background');
+
+    if (!BackgroundTranslator.loggedApiSource) {
+      console.log('[CVW] ✅ Using Chrome built-in Translator API (via background service worker)');
+      BackgroundTranslator.loggedApiSource = true;
+    }
+
     return response.translated;
   }
 }

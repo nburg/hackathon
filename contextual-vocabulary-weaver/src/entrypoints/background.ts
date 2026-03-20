@@ -11,13 +11,33 @@ let _translator: { translate(text: string): Promise<string> } | null = null;
 
 async function getTranslator() {
   if (_translator) return _translator;
-  if (typeof Translator === 'undefined') return null;
+
+  console.log('[Background] Checking Translator API...');
+  console.log('[Background] typeof Translator:', typeof Translator);
+
+  if (typeof Translator === 'undefined') {
+    console.error('[Background] Translator API not found');
+    return null;
+  }
+
   try {
+    console.log('[Background] Checking availability...');
     const availability = await Translator.availability({ sourceLanguage: 'en', targetLanguage: 'es' });
-    if (availability !== 'available') return null;
+    console.log('[Background] Availability:', availability);
+
+    if (availability === 'unavailable') {
+      console.error('[Background] Model unavailable - cannot create translator');
+      return null;
+    }
+
+    // Try to create translator even if availability is "downloadable" or "downloading"
+    // Sometimes the model is installed but reports wrong status
+    console.log('[Background] Creating translator (availability:', availability, ')...');
     _translator = await Translator.create({ sourceLanguage: 'en', targetLanguage: 'es' });
+    console.log('[Background] Translator created successfully!');
     return _translator;
-  } catch {
+  } catch (e) {
+    console.error('[Background] Translator creation failed:', e);
     return null;
   }
 }
@@ -38,7 +58,12 @@ export default defineBackground(() => {
     const text = (message as any).text as string;
 
     getTranslator().then(t => {
-      if (!t) { sendResponse({ error: 'Translator not ready' }); return; }
+      if (!t) {
+        console.log('[Background] Using MyMemory API (Chrome Translator unavailable)');
+        sendResponse({ error: 'Translator not ready' });
+        return;
+      }
+      console.log('[Background] Using Chrome built-in Translator API');
       return t.translate(text).then(translated => sendResponse({ translated }));
     }).catch(e => sendResponse({ error: String(e) }));
 
