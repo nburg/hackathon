@@ -87,6 +87,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
+      {/* Skip to main content link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -94,6 +102,8 @@ export default function App() {
           </h1>
           {saveMessage && (
             <div
+              role="status"
+              aria-live="polite"
               className={`px-4 py-2 rounded-lg text-sm font-medium ${
                 saveMessage.includes('✓')
                   ? 'bg-green-100 text-green-800'
@@ -105,7 +115,7 @@ export default function App() {
           )}
         </div>
 
-        <div className="space-y-6">
+        <main id="main-content" className="space-y-6">
           {/* Global Toggle */}
           <Card title="Extension Status">
             <Toggle
@@ -151,7 +161,11 @@ export default function App() {
                 Add
               </Button>
             </div>
-            {patternError && <p className="text-xs text-red-500 mb-2">{patternError}</p>}
+            {patternError && (
+              <p role="alert" aria-live="assertive" className="text-xs text-red-600 mb-2">
+                {patternError}
+              </p>
+            )}
             {(settings.siteRegexPatterns || []).length === 0 ? (
               <p className="text-xs text-gray-400 italic">
                 No patterns — extension runs on all sites.
@@ -183,7 +197,7 @@ export default function App() {
               change them.
             </p>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

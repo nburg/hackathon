@@ -40,17 +40,22 @@ function detectAPI(): DetectedAPI {
 async function getAvailability(detected: DetectedAPI, code: string): Promise<Availability> {
   if (!detected) return 'unavailable';
   if (detected.shape === 'legacy') {
+    if (!detected.api.canTranslate) return 'unavailable';
     const r = await detected.api.canTranslate({ sourceLanguage: 'en', targetLanguage: code });
     return r === 'readily' ? 'available' : r === 'after-download' ? 'downloadable' : 'unavailable';
   }
-  return detected.api.availability({ sourceLanguage: 'en', targetLanguage: code });
+  if (!detected.api.availability) return 'unavailable';
+  const av = await detected.api.availability({ sourceLanguage: 'en', targetLanguage: code });
+  return av as Availability;
 }
 
 async function createTranslator(detected: DetectedAPI, code: string): Promise<ChromeTranslator> {
   if (!detected) throw new Error('No API');
   if (detected.shape === 'legacy') {
+    if (!detected.api.createTranslator) throw new Error('createTranslator not available');
     return detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: code });
   }
+  if (!detected.api.create) throw new Error('create not available');
   return detected.api.create({ sourceLanguage: 'en', targetLanguage: code });
 }
 
