@@ -217,8 +217,6 @@ export function getTop200ForLanguage(targetLanguage: string): readonly string[] 
   return LANGUAGE_WORD_MAP[targetLanguage] ?? TOP_200_COMMON_WORDS_ES;
 }
 
-// Alias for backwards compatibility
-export const TOP_200_COMMON_WORDS = TOP_200_COMMON_WORDS_ES;
 
 // ── Thresholds & config ──────────────────────────────────────────────────────
 
