@@ -27,7 +27,11 @@ export default function App() {
   useState(() => {
     chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
       if (tab?.url) {
-        try { setCurrentHostname(new URL(tab.url).hostname); } catch { /* ignore */ }
+        try {
+          setCurrentHostname(new URL(tab.url).hostname);
+        } catch {
+          /* ignore */
+        }
       }
     });
   });
@@ -44,9 +48,7 @@ export default function App() {
       const hostname = new URL(tab.url).hostname;
       const current = settings!.disabledSites || [];
       const isDisabled = current.includes(hostname);
-      const updated = isDisabled
-        ? current.filter((h) => h !== hostname)
-        : [...current, hostname];
+      const updated = isDisabled ? current.filter((h) => h !== hostname) : [...current, hostname];
       await updateSettings({ disabledSites: updated });
       await chrome.tabs.reload(tab.id);
     } catch {
@@ -140,7 +142,11 @@ export default function App() {
           variant="secondary"
           onClick={toggleThisSite}
           disabled={togglingSite}
-          aria-label={siteIsDisabled ? 'Re-enable extension on this website' : 'Disable extension on this website'}
+          aria-label={
+            siteIsDisabled
+              ? 'Re-enable extension on this website'
+              : 'Disable extension on this website'
+          }
         >
           {siteIsDisabled ? 'Re-enable on This Site' : 'Disable on This Site'}
         </Button>
