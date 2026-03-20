@@ -69,6 +69,51 @@ contextual-vocabulary-weaver/
 
 ---
 
+## Development
+
+### Commands
+
+```bash
+# Development
+npm run dev              # Start WXT dev server with hot reload
+npm run dev:firefox      # Start dev server for Firefox
+
+# Building
+npm run build            # Production build for Chrome
+npm run build:firefox    # Production build for Firefox
+npm run zip              # Create distribution ZIP
+
+# Quality Checks
+npm run compile          # TypeScript type checking
+npm run lint             # Run ESLint (use --fix to auto-fix)
+npm run test             # Run tests in watch mode
+npm run test:run         # Run all tests once (CI mode)
+npm run test:coverage    # Generate coverage report
+```
+
+### Testing
+
+The project uses **Vitest** for unit testing with 40+ tests covering:
+- **Storage Manager (26 tests)**: BKT algorithm, SRS priority calculation, per-language word statistics
+- **Multi-Language (14 tests)**: 83-language support, word list loading, fallback behavior
+
+Run tests before committing:
+```bash
+npm run test:run    # All tests must pass
+npm run lint        # No ESLint errors
+npm run compile     # No TypeScript errors
+```
+
+### Version Management
+
+**CRITICAL**: The extension version must be synchronized in two files:
+- `package.json` → `"version": "X.Y.Z"`
+- `wxt.config.ts` → `version: 'X.Y.Z'` (inside the `manifest` block)
+
+Chrome reads the version from `wxt.config.ts`, not `package.json`.
+
+---
+
 ## Troubleshooting
 
 **No words are being translated**
@@ -85,3 +130,9 @@ The language pair is not supported by Chrome's on-device API. The extension fall
 
 **Words replaced but always in Spanish**
 Open the Options page and confirm the target language is set correctly. The background service worker caches the translator per language and will re-warm automatically when you change the setting.
+
+---
+
+## Supported Languages (83)
+
+Afrikaans (af), Albanian (sq), Amharic (am), Arabic (ar), Azerbaijani (az), Basque (eu), Belarusian (be), Bengali (bn), Bosnian (bs), Bulgarian (bg), Burmese (my), Catalan (ca), Chinese Simplified (zh-CN), Chinese Traditional (zh-TW), Croatian (hr), Czech (cs), Danish (da), Dutch (nl), Estonian (et), Filipino (fil), Finnish (fi), French (fr), Frisian (fy), Galician (gl), Georgian (ka), German (de), Greek (el), Gujarati (gu), Hausa (ha), Hebrew (he), Hindi (hi), Hungarian (hu), Icelandic (is), Igbo (ig), Indonesian (id), Irish (ga), Italian (it), Japanese (ja), Kannada (kn), Khmer (km), Korean (ko), Kyrgyz (ky), Lao (lo), Latvian (lv), Lingala (ln), Lithuanian (lt), Luxembourgish (lb), Macedonian (mk), Malay (ms), Malayalam (ml), Maltese (mt), Marathi (mr), Mongolian (mn), Nepali (ne), Norwegian (no), Odia (or), Persian (fa), Polish (pl), Portuguese (pt), Punjabi (pa), Romanian (ro), Russian (ru), Scottish Gaelic (gd), Serbian (sr), Slovak (sk), Slovenian (sl), Somali (so), Spanish (es), Swahili (sw), Swedish (sv), Tagalog (tl), Tajik (tg), Tamil (ta), Telugu (te), Thai (th), Turkish (tr), Ukrainian (uk), Urdu (ur), Uzbek (uz), Vietnamese (vi), Welsh (cy), Zulu (zu)

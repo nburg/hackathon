@@ -100,39 +100,151 @@ Each `WordCandidate` carries: `word`, `pos`, `node` (DOM Text), `offset`, `lengt
 
 ```bash
 npm install
-npm run dev          # WXT dev server with HMR (Chrome)
-npm run build        # Production build
-npm run compile      # TypeScript type-check only (tsc --noEmit)
-npm run lint         # ESLint over src/
+npm run dev              # WXT dev server with HMR (Chrome)
+npm run build            # Production build
+npm run compile          # TypeScript type-check only (tsc --noEmit)
+npm run lint             # ESLint over src/ and lib/
+npm run test             # Run tests in watch mode (Vitest)
+npm run test:run         # Run all tests once (CI mode)
+npm run test:ui          # Open Vitest UI for interactive testing
+npm run test:coverage    # Run tests with coverage report
 ```
 
 ## Release Process
 
 When cutting a new release:
 
-1. **Update the version** in two places (both must match):
+1. **Verify version sync** (CRITICAL - both files must match):
    - `contextual-vocabulary-weaver/package.json` → `"version": "X.Y.Z"`
    - `contextual-vocabulary-weaver/wxt.config.ts` → `version: 'X.Y.Z'` inside the `manifest` block
-   > `wxt.config.ts` is what Chrome reads — `package.json` alone is not enough.
+   > **Source of truth**: `wxt.config.ts` is what Chrome reads — `package.json` alone is not enough.
 
-2. **Commit and push** the version bump to main.
-
-3. **Create and push a git tag:**
+   **Verification command**:
    ```bash
-   git tag vX.Y
-   git push origin vX.Y
+   # Check both files show the same version
+   grep '"version"' contextual-vocabulary-weaver/package.json
+   grep 'version:' contextual-vocabulary-weaver/wxt.config.ts
    ```
 
-4. **Build:**
+2. **Run quality checks** (all must pass):
+   ```bash
+   cd contextual-vocabulary-weaver
+   npm run compile      # TypeScript type-check
+   npm run lint         # ESLint (auto-fix with --fix if needed)
+   npm run test:run     # All tests must pass
+   ```
+
+3. **Commit and push** the version bump to main:
+   ```bash
+   git add .
+   git commit -m "chore: bump version to vX.Y.Z"
+   git push origin main
+   ```
+
+4. **Create and push a git tag:**
+   ```bash
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+
+5. **Build for production:**
    ```bash
    cd contextual-vocabulary-weaver
    npm run build
    ```
 
-Always make sure any codebase changes pass linting checks before pushing.
+6. **Test the build** (optional but recommended):
+   - Load `.output/chrome-mv3` in Chrome as unpacked extension
+   - Verify basic functionality (word replacement, settings, dashboard)
+
+**Pre-release checklist**:
+- [ ] Version numbers match in both `package.json` and `wxt.config.ts`
+- [ ] `npm run compile` passes with no errors
+- [ ] `npm run lint` passes with no errors
+- [ ] `npm run test:run` passes (all tests green)
+- [ ] Git working directory is clean
+- [ ] Committed to main branch
+- [ ] Git tag created and pushed
+- [ ] Production build generated
 
 ---
 
+## Testing
+
+The extension uses **Vitest** for unit testing with **happy-dom** for DOM simulation.
+
+### Test Structure
+
+```
+contextual-vocabulary-weaver/
+  test/
+    setup.ts                    # Chrome API mocks (chrome.storage, chrome.runtime)
+    storage-manager.test.ts     # BKT algorithm, SRS priority, CRUD operations (26 tests)
+    multi-language.test.ts      # 83-language support, getTop200ForLanguage() (14 tests)
+  vitest.config.ts              # Vitest configuration
+```
+
+### Running Tests
+
+```bash
+npm run test          # Watch mode (re-runs on file changes)
+npm run test:run      # Run once (CI mode)
+npm run test:ui       # Interactive UI
+npm run test:coverage # With coverage report
+```
+
+### Test Coverage
+
+- **Storage Manager (P5)**: 26 tests covering:
+  - Settings CRUD operations
+  - Word stats CRUD with per-language storage keys
+  - Bayesian Knowledge Tracing (BKT) algorithm correctness
+  - Word priority calculation (frequency-based + inverse pKnown)
+  - Learning analytics (summary, recent words)
+  - Phase 2 trigger logic (70% threshold on top-200 words)
+
+- **Multi-Language Support (Role 3)**: 14 tests covering:
+  - `getTop200ForLanguage()` for all 83 languages
+  - Fallback to Spanish for unsupported languages
+  - Per-language word statistics isolation
+  - Data quality (unique words, no empty strings)
+
+### Mock Architecture
+
+`test/setup.ts` provides in-memory mocks for Chrome APIs:
+- `chrome.storage.local` — Key-value store (like Redis/SQLite in-memory)
+- `chrome.storage.sync` — Separate key-value store for sync data
+- `chrome.runtime.sendMessage` — Message passing for translator
+
+**Helper functions**:
+- `clearMockStorage()` — Reset all storage between tests
+- `setMockStorageState(local, sync)` — Populate storage with test data
+- `getMockStorageState()` — Inspect current storage (debugging)
+
+### Adding New Tests
+
+1. Import test utilities:
+   ```typescript
+   import { describe, it, expect, beforeEach } from 'vitest';
+   import { clearMockStorage, setMockStorageState } from './setup';
+   ```
+
+2. Clear storage before each test:
+   ```typescript
+   beforeEach(() => {
+     clearMockStorage();
+   });
+   ```
+
+3. Use `setMockStorageState()` to set up test data:
+   ```typescript
+   setMockStorageState({
+     settings: { ...DEFAULT_SETTINGS, targetLanguage: 'es' },
+     word_stats_es: { hello: { word: 'hello', pKnown: 0.5, ... } }
+   });
+   ```
+
+---
 
 ## Extension Architecture
 
