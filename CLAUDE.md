@@ -120,11 +120,10 @@ When cutting a new release:
    git push origin vX.Y
    ```
 
-4. **Build and package:**
+4. **Build:**
    ```bash
    cd contextual-vocabulary-weaver
    npm run build
-   tar -czf ~/contextual-vocabulary-weaver-chrome-mv3.tar.gz -C .output chrome-mv3
    ```
 
 ## Extension Architecture
