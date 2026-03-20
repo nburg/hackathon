@@ -2,10 +2,20 @@
 // Translator global — only accessible at extension-level (not in content
 // scripts on regular pages). Declared here so the service worker can own it.
 // ---------------------------------------------------------------------------
-declare const Translator: undefined | {
-  availability(opts: { sourceLanguage: string; targetLanguage: string }): Promise<string>;
-  create(opts: { sourceLanguage: string; targetLanguage: string }): Promise<{ translate(text: string): Promise<string> }>;
-};
+declare const Translator:
+  | undefined
+  | {
+      availability(opts: { sourceLanguage: string; targetLanguage: string }): Promise<string>;
+      create(opts: {
+        sourceLanguage: string;
+        targetLanguage: string;
+      }): Promise<{ translate(text: string): Promise<string> }>;
+    };
+
+interface TranslateMessage {
+  type: 'translate';
+  text: string;
+}
 
 let _translator: { translate(text: string): Promise<string> } | null = null;
 
@@ -22,7 +32,10 @@ async function getTranslator() {
 
   try {
     console.log('[Background] Checking availability...');
-    const availability = await Translator.availability({ sourceLanguage: 'en', targetLanguage: 'es' });
+    const availability = await Translator.availability({
+      sourceLanguage: 'en',
+      targetLanguage: 'es',
+    });
     console.log('[Background] Availability:', availability);
 
     if (availability === 'unavailable') {
@@ -54,18 +67,25 @@ export default defineBackground(() => {
 
   // Content scripts can't access Translator directly — proxy through here.
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
-    if (!message || (message as any).type !== 'translate') return false;
-    const text = (message as any).text as string;
+    if (
+      !message ||
+      typeof message !== 'object' ||
+      (message as TranslateMessage).type !== 'translate'
+    )
+      return false;
+    const text = (message as TranslateMessage).text;
 
-    getTranslator().then(t => {
-      if (!t) {
-        console.log('[Background] Using MyMemory API (Chrome Translator unavailable)');
-        sendResponse({ error: 'Translator not ready' });
-        return;
-      }
-      console.log('[Background] Using Chrome built-in Translator API');
-      return t.translate(text).then(translated => sendResponse({ translated }));
-    }).catch(e => sendResponse({ error: String(e) }));
+    getTranslator()
+      .then((t) => {
+        if (!t) {
+          console.log('[Background] Using MyMemory API (Chrome Translator unavailable)');
+          sendResponse({ error: 'Translator not ready' });
+          return;
+        }
+        console.log('[Background] Using Chrome built-in Translator API');
+        return t.translate(text).then((translated) => sendResponse({ translated }));
+      })
+      .catch((e) => sendResponse({ error: String(e) }));
 
     return true; // keep message channel open for async response
   });

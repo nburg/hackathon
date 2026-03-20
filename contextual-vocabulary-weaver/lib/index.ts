@@ -18,11 +18,7 @@ export type { WordStats, ExtensionSettings, StorageSchema } from './types';
 
 // Export constants that others might need
 export { STORAGE_KEYS, DEFAULT_SETTINGS } from './types';
-export {
-  TOP_200_COMMON_WORDS,
-  PHASE2_THRESHOLD,
-  KNOWN_THRESHOLD,
-} from './constants';
+export { TOP_200_COMMON_WORDS, PHASE2_THRESHOLD, KNOWN_THRESHOLD } from './constants';
 
 // Export all storage functions
 export {

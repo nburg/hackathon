@@ -15,12 +15,15 @@ class BackgroundTranslator implements Translator {
   private static loggedApiSource = false;
 
   async translate(text: string): Promise<string> {
-    const response = await browser.runtime.sendMessage({ type: 'translate', text }) as
-      { translated?: string; error?: string } | undefined;
+    const response = (await browser.runtime.sendMessage({ type: 'translate', text })) as
+      | { translated?: string; error?: string }
+      | undefined;
 
     if (response?.error) {
       if (!BackgroundTranslator.loggedApiSource) {
-        console.log('[CVW] ❌ Chrome Translator API unavailable - would fall back to MyMemory (not implemented in current code)');
+        console.log(
+          '[CVW] ❌ Chrome Translator API unavailable - would fall back to MyMemory (not implemented in current code)'
+        );
         BackgroundTranslator.loggedApiSource = true;
       }
       throw new Error(response.error);
@@ -51,7 +54,6 @@ interface SentenceCandidate {
 // ---------------------------------------------------------------------------
 // TranslationPipeline
 // ---------------------------------------------------------------------------
-
 
 export class TranslationPipeline {
   private translator: Translator | null = null;
@@ -105,10 +107,7 @@ export class TranslationPipeline {
     const allCandidates = extractCandidates(document);
 
     // Filter: skip proper nouns and multi-word expressions.
-    const eligible = filterCandidates(
-      allCandidates,
-      (c) => !c.isProperNoun && !c.isMultiWord,
-    );
+    const eligible = filterCandidates(allCandidates, (c) => !c.isProperNoun && !c.isMultiWord);
 
     // Fetch all P5 priority scores in parallel (getWordPriority is async).
     const scores = await Promise.all(eligible.map((c) => getWordPriority(c.word)));
@@ -143,7 +142,7 @@ export class TranslationPipeline {
       sentenceCandidates.map(async (sc) => {
         const wordScores = await Promise.all(sc.words.map((w) => getWordPriority(w.word)));
         return Math.max(...wordScores);
-      }),
+      })
     );
 
     const ranked = sentenceCandidates
@@ -212,7 +211,7 @@ export class TranslationPipeline {
 
     try {
       const cached = this.cache.get(query);
-      const translated = cached ?? await this.translator!.translate(query);
+      const translated = cached ?? (await this.translator!.translate(query));
       if (!cached) this.cache.set(query, translated);
       const match = translated.match(/\[\[(.+?)\]\]/);
       if (match?.[1]) return match[1].trim();
@@ -263,11 +262,16 @@ export class TranslationPipeline {
  */
 function buildPOSQuery(word: string, pos: string): string {
   switch (pos) {
-    case 'Verb':      return `I [[${word}]]`;
-    case 'Noun':      return `The [[${word}]]`;
-    case 'Adjective': return `It is [[${word}]]`;
-    case 'Adverb':    return `I do it [[${word}]]`;
-    default:          return `[[${word}]]`;
+    case 'Verb':
+      return `I [[${word}]]`;
+    case 'Noun':
+      return `The [[${word}]]`;
+    case 'Adjective':
+      return `It is [[${word}]]`;
+    case 'Adverb':
+      return `I do it [[${word}]]`;
+    default:
+      return `[[${word}]]`;
   }
 }
 
@@ -365,8 +369,12 @@ function createSentenceSpan(original: string, translation: string): HTMLSpanElem
   span.textContent = translation;
   span.title = original;
 
-  span.addEventListener('mouseenter', () => { span.textContent = original; });
-  span.addEventListener('mouseleave', () => { span.textContent = translation; });
+  span.addEventListener('mouseenter', () => {
+    span.textContent = original;
+  });
+  span.addEventListener('mouseleave', () => {
+    span.textContent = translation;
+  });
 
   return span;
 }
@@ -384,7 +392,9 @@ function createWordSpan(original: string, translation: string): HTMLSpanElement 
     // Fire-and-forget: hovering to see the original counts as a recall failure.
     trackRecallFailure(original).catch(() => {});
   });
-  span.addEventListener('mouseleave', () => { span.textContent = translation; });
+  span.addEventListener('mouseleave', () => {
+    span.textContent = translation;
+  });
 
   return span;
 }

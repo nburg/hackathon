@@ -11,11 +11,14 @@ export default defineContentScript({
 
     const settings = await getSettings();
 
-    // If regex patterns are defined, only run on matching URLs
+    // If regex patterns are defined, only run on matching URLs.
+    // Patterns are length-capped to 500 chars to prevent ReDoS from
+    // pathological inputs stored in user settings.
     const patterns = settings.siteRegexPatterns || [];
     if (patterns.length > 0) {
       const url = window.location.href;
       const matches = patterns.some((p) => {
+        if (p.length > 500) return false;
         try {
           return new RegExp(p).test(url);
         } catch {
@@ -25,21 +28,18 @@ export default defineContentScript({
       if (!matches) return;
     }
 
+    if (!settings.isEnabled) {
+      console.log('[CVW] Extension disabled');
+      return;
+    }
+
     // Inject CSS into page
     const styleElement = document.createElement('style');
     styleElement.textContent = styles;
     document.head.appendChild(styleElement);
 
-    // Read P2's settings: density (1–10 integer) + global enabled toggle.
-    const p2Settings = await getSettings();
-
-    if (!p2Settings.isEnabled) {
-      console.log('[CVW] Extension disabled');
-      return;
-    }
-
     // P2 stores density as 1–10 (percent). Pipeline expects a 0–1 fraction.
-    const densityFraction = p2Settings.density / 100;
+    const densityFraction = settings.density / 100;
 
     const pipeline = new TranslationPipeline();
     const ready = await pipeline.init();
