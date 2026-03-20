@@ -4,9 +4,14 @@ import { ProgressIndicator } from '@/components/dashboard/ProgressIndicator';
 import { WordCard } from '@/components/dashboard/WordCard';
 import { LoadingScreen } from '@/components/ui/Spinner';
 import { useVocabulary } from '@/lib/hooks/useVocabulary';
+import { useSettings } from '@/lib/hooks/useSettings';
+
+const LANGUAGE_NAMES: Record<string, string> = { es: 'Spanish', ta: 'Tamil' };
 
 export default function App() {
   const { vocabulary, loading, error } = useVocabulary();
+  const { settings } = useSettings();
+  const langName = LANGUAGE_NAMES[settings?.language ?? 'es'] ?? 'your language';
 
   if (loading) {
     return <LoadingScreen message="Loading your vocabulary..." />;
@@ -36,7 +41,7 @@ export default function App() {
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Vocabulary Progress</h1>
-          <p className="text-gray-600">Track your Spanish learning journey as you browse the web</p>
+          <p className="text-gray-600">Track your {langName} learning journey as you browse the web</p>
         </div>
 
         <Card className="mb-8">
@@ -49,7 +54,7 @@ export default function App() {
               <div className="text-6xl mb-4">📖</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No words tracked yet</h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Start browsing websites to see Spanish words replace English ones. Each word you
+                Start browsing websites to see {langName} words replace English ones. Each word you
                 encounter will appear here with your learning progress!
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

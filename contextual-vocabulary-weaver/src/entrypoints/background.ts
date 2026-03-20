@@ -8,14 +8,25 @@ declare const Translator: undefined | {
 };
 
 let _translator: { translate(text: string): Promise<string> } | null = null;
+let _translatorLang: string | null = null;
 
-async function getTranslator() {
-  if (_translator) return _translator;
+async function getCurrentTargetLanguage(): Promise<string> {
+  try {
+    const result = await chrome.storage.local.get('settings');
+    return (result['settings'] as Record<string, unknown>)?.targetLanguage as string ?? 'es';
+  } catch {
+    return 'es';
+  }
+}
+
+async function getTranslatorForLanguage(lang: string) {
+  if (_translator && _translatorLang === lang) return _translator;
   if (typeof Translator === 'undefined') return null;
   try {
-    const availability = await Translator.availability({ sourceLanguage: 'en', targetLanguage: 'es' });
+    const availability = await Translator.availability({ sourceLanguage: 'en', targetLanguage: lang });
     if (availability !== 'available') return null;
-    _translator = await Translator.create({ sourceLanguage: 'en', targetLanguage: 'es' });
+    _translator = await Translator.create({ sourceLanguage: 'en', targetLanguage: lang });
+    _translatorLang = lang;
     return _translator;
   } catch {
     return null;
@@ -30,18 +41,46 @@ export default defineBackground(() => {
   });
 
   // Warm up the translator on startup so the first page load isn't slow.
-  getTranslator();
+  getCurrentTargetLanguage().then(lang => getTranslatorForLanguage(lang));
+
+  // Invalidate the cached translator when the language setting changes.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !changes['settings']) return;
+    const newLang = (changes['settings'].newValue as Record<string, unknown>)?.targetLanguage as string | undefined;
+    if (newLang && newLang !== _translatorLang) {
+      _translator = null;
+      _translatorLang = null;
+      // Eagerly pre-warm the translator for the new language.
+      getTranslatorForLanguage(newLang);
+    }
+  });
 
   // Content scripts can't access Translator directly — proxy through here.
   browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
-    if (!message || (message as any).type !== 'translate') return false;
-    const text = (message as any).text as string;
+    const msg = message as { type?: string; text?: string; targetLanguage?: string };
+    if (!msg) return false;
 
-    getTranslator().then(t => {
-      if (!t) { sendResponse({ error: 'Translator not ready' }); return; }
-      return t.translate(text).then(translated => sendResponse({ translated }));
-    }).catch(e => sendResponse({ error: String(e) }));
+    if (msg.type === 'check-availability') {
+      const lang = msg.targetLanguage ?? 'es';
+      if (typeof Translator === 'undefined') {
+        sendResponse({ available: false });
+        return false;
+      }
+      Translator.availability({ sourceLanguage: 'en', targetLanguage: lang })
+        .then(result => sendResponse({ available: result === 'available' }))
+        .catch(() => sendResponse({ available: false }));
+      return true;
+    }
 
-    return true; // keep message channel open for async response
+    if (msg.type === 'translate') {
+      const text = msg.text as string;
+      getCurrentTargetLanguage().then(lang => getTranslatorForLanguage(lang)).then(t => {
+        if (!t) { sendResponse({ error: 'Translator not ready' }); return; }
+        return t.translate(text).then(translated => sendResponse({ translated }));
+      }).catch(e => sendResponse({ error: String(e) }));
+      return true; // keep message channel open for async response
+    }
+
+    return false;
   });
 });

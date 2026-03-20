@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chrome AI Translator — Debug</title>
+  <style>
+    body { font-family: monospace; padding: 2rem; background: #111; color: #eee; }
+    h1 { color: #fff; margin-bottom: 1.5rem; }
+    .step { margin: 0.5rem 0; padding: 0.6rem 1rem; border-radius: 4px; border-left: 4px solid #555; background: #1e1e1e; }
+    .step.pass  { border-color: #4caf50; }
+    .step.fail  { border-color: #f44336; }
+    .step.warn  { border-color: #ff9800; }
+    .step.info  { border-color: #2196f3; }
+    .label { font-weight: bold; margin-right: 0.5rem; }
+    .pass  .label { color: #4caf50; }
+    .fail  .label { color: #f44336; }
+    .warn  .label { color: #ff9800; }
+    .info  .label { color: #2196f3; }
+    #fix-hints { margin-top: 2rem; }
+    #fix-hints h2 { color: #aaa; }
+    .hint { background: #1e1e1e; border: 1px solid #333; border-radius: 4px;
+            padding: 0.8rem 1rem; margin: 0.4rem 0; }
+    .hint code { color: #80cbc4; }
+    button { margin-top: 1.5rem; padding: 0.6rem 1.4rem; font-size: 1rem;
+             background: #2196f3; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #1976d2; }
+  </style>
+</head>
+<body>
+  <h1>Chrome AI Translator — Debug</h1>
+  <div id="steps"></div>
+  <div id="fix-hints"></div>
+  <button onclick="runDiagnostics()">Re-run</button>
+
+  <script>
+    const stepsEl = document.getElementById('steps');
+    const hintsEl = document.getElementById('fix-hints');
+
+    function log(level, label, message) {
+      const div = document.createElement('div');
+      div.className = `step ${level}`;
+      div.innerHTML = `<span class="label">[${label}]</span>${message}`;
+      stepsEl.appendChild(div);
+    }
+
+    function hint(html) {
+      hintsEl.innerHTML += `<div class="hint">${html}</div>`;
+    }
+
+    async function runDiagnostics() {
+      stepsEl.innerHTML = '';
+      hintsEl.innerHTML = '';
+
+      // ── 1. Chrome version ──────────────────────────────────────────────────
+      const ua = navigator.userAgent;
+      const versionMatch = ua.match(/Chrome\/(\d+)/);
+      const chromeVersion = versionMatch ? parseInt(versionMatch[1]) : null;
+      if (chromeVersion === null) {
+        log('fail', 'BROWSER', `Not Chrome (UA: ${ua})`);
+        hint('The built-in Translator API is <strong>Chrome-only</strong>. Open this page in Chrome.');
+        return;
+      }
+      log(chromeVersion >= 131 ? 'pass' : 'warn', 'VERSION',
+        `Chrome ${chromeVersion} detected. ` +
+        (chromeVersion >= 131 ? 'New API (window.ai.translator) may be available.'
+                               : 'Chrome 131+ required for window.ai.translator.'));
+      if (chromeVersion < 131) {
+        hint(`Update Chrome to version 131 or later. You are on <strong>${chromeVersion}</strong>.`);
+      }
+
+      // ── 2. window.ai ────────────────────────────────────────────────────────
+      if (!window.ai) {
+        log('fail', 'window.ai', 'undefined — flag not enabled or Chrome too old.');
+        hint('Enable the flag: open <code>chrome://flags/#optimization-guide-on-device-model</code> → <strong>Enabled BypassPerfRequirement</strong>, then restart Chrome.');
+        hint('Also enable: <code>chrome://flags/#translation-api</code> → <strong>Enabled</strong>, then restart Chrome.');
+        return;
+      }
+      log('pass', 'window.ai', `present — keys: ${Object.keys(window.ai).join(', ') || '(none visible)'}`);
+
+      // ── 3. window.ai.translator ─────────────────────────────────────────────
+      if (!window.ai.translator) {
+        log('fail', 'window.ai.translator', 'undefined — translation flag not enabled.');
+        hint('Enable: <code>chrome://flags/#translation-api</code> → <strong>Enabled</strong>, restart Chrome.');
+        return;
+      }
+      log('pass', 'window.ai.translator', 'present.');
+
+      // ── 4. availability() ───────────────────────────────────────────────────
+      let availability;
+      try {
+        availability = await window.ai.translator.availability({ sourceLanguage: 'en', targetLanguage: 'es' });
+        const levelMap = { available: 'pass', downloadable: 'warn', downloading: 'warn', unavailable: 'fail' };
+        log(levelMap[availability] ?? 'warn', 'AVAILABILITY', `en→es: <strong>${availability}</strong>`);
+      } catch (e) {
+        log('fail', 'AVAILABILITY', `availability() threw: ${e}`);
+        hint(`Unexpected error calling <code>availability()</code>: <em>${e}</em>`);
+        return;
+      }
+
+      if (availability === 'unavailable') {
+        hint('The en→es language pair is <strong>unavailable</strong>. Try: <code>chrome://on-device-translation-internals</code> to manually trigger a download, or wait for Chrome to download the language pack automatically.');
+        return;
+      }
+      if (availability === 'downloadable') {
+        hint('Language model needs to download. Call <code>create()</code> once to trigger the download — it may take a few minutes. Re-run this page afterwards.');
+      }
+      if (availability === 'downloading') {
+        hint('Model is currently downloading. Wait for it to finish, then re-run.');
+      }
+
+      // ── 5. create() ─────────────────────────────────────────────────────────
+      let translator;
+      try {
+        translator = await window.ai.translator.create({ sourceLanguage: 'en', targetLanguage: 'es' });
+        log('pass', 'CREATE', 'Translator created successfully.');
+      } catch (e) {
+        log('fail', 'CREATE', `create() threw: ${e}`);
+        hint(`<code>create()</code> failed: <em>${e}</em>. If this is a QuotaExceeded error, Chrome's on-device storage is full. If it's a NotSupportedError, the language pair may still be downloading.`);
+        return;
+      }
+
+      // ── 6. translate() ──────────────────────────────────────────────────────
+      const testPhrases = [
+        { en: 'I can do it',    note: 'modal verb — should give "puedo", not "bote"' },
+        { en: 'a tin can',      note: 'noun — should give "lata" or "bote"' },
+        { en: 'The book',       note: 'simple noun' },
+        { en: 'I [[run]] fast', note: 'marker extraction test' },
+      ];
+
+      for (const { en, note } of testPhrases) {
+        try {
+          const es = await translator.translate(en);
+          log('pass', 'TRANSLATE', `"${en}" → "<strong>${es}</strong>" <em>(${note})</em>`);
+        } catch (e) {
+          log('fail', 'TRANSLATE', `"${en}" threw: ${e}`);
+        }
+      }
+
+      log('info', 'DONE', 'All checks complete. Chrome AI Translator is <strong>working</strong>.');
+    }
+
+    runDiagnostics();
+  </script>
+</body>
+</html>

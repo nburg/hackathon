@@ -65,6 +65,8 @@
   padding: 0 2px;
   display: inline;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  /* Ensure non-Latin scripts (e.g. Tamil) render correctly on Latin-only pages */
+  font-family: inherit, 'Noto Sans Tamil', 'Latha', 'Tamil MN', sans-serif;
 }
 
 .cvw-word:hover {
@@ -80,6 +82,7 @@
   cursor: help;
   display: inline;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  font-family: inherit, 'Noto Sans Tamil', 'Latha', 'Tamil MN', sans-serif;
 }
 
 .cvw-sentence:hover {

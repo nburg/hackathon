@@ -1,3 +1,97 @@
+// ── language registry ──────────────────────────────────────────────────────────
+// Keep in sync with src/lib/storage/api.ts :: SUPPORTED_LANGUAGES
+const SUPPORTED_LANGUAGES = [
+  { code: 'af',    label: 'Afrikaans',             flag: '🇿🇦' },
+  { code: 'sq',    label: 'Albanian',              flag: '🇦🇱' },
+  { code: 'am',    label: 'Amharic',               flag: '🇪🇹' },
+  { code: 'ar',    label: 'Arabic',                flag: '🇸🇦' },
+  { code: 'az',    label: 'Azerbaijani',           flag: '🇦🇿' },
+  { code: 'eu',    label: 'Basque',                flag: '🇪🇸' },
+  { code: 'be',    label: 'Belarusian',            flag: '🇧🇾' },
+  { code: 'bn',    label: 'Bengali',               flag: '🇧🇩' },
+  { code: 'bs',    label: 'Bosnian',               flag: '🇧🇦' },
+  { code: 'bg',    label: 'Bulgarian',             flag: '🇧🇬' },
+  { code: 'my',    label: 'Burmese',               flag: '🇲🇲' },
+  { code: 'ca',    label: 'Catalan',               flag: '🇪🇸' },
+  { code: 'zh-CN', label: 'Chinese (Simplified)',  flag: '🇨🇳' },
+  { code: 'zh-TW', label: 'Chinese (Traditional)', flag: '🇹🇼' },
+  { code: 'hr',    label: 'Croatian',              flag: '🇭🇷' },
+  { code: 'cs',    label: 'Czech',                 flag: '🇨🇿' },
+  { code: 'da',    label: 'Danish',                flag: '🇩🇰' },
+  { code: 'nl',    label: 'Dutch',                 flag: '🇳🇱' },
+  { code: 'et',    label: 'Estonian',              flag: '🇪🇪' },
+  { code: 'fil',   label: 'Filipino',              flag: '🇵🇭' },
+  { code: 'fi',    label: 'Finnish',               flag: '🇫🇮' },
+  { code: 'fr',    label: 'French',                flag: '🇫🇷' },
+  { code: 'fy',    label: 'Frisian',               flag: '🇳🇱' },
+  { code: 'gl',    label: 'Galician',              flag: '🇪🇸' },
+  { code: 'ka',    label: 'Georgian',              flag: '🇬🇪' },
+  { code: 'de',    label: 'German',                flag: '🇩🇪' },
+  { code: 'el',    label: 'Greek',                 flag: '🇬🇷' },
+  { code: 'gu',    label: 'Gujarati',              flag: '🇮🇳' },
+  { code: 'ha',    label: 'Hausa',                 flag: '🇳🇬' },
+  { code: 'he',    label: 'Hebrew',                flag: '🇮🇱' },
+  { code: 'hi',    label: 'Hindi',                 flag: '🇮🇳' },
+  { code: 'hu',    label: 'Hungarian',             flag: '🇭🇺' },
+  { code: 'is',    label: 'Icelandic',             flag: '🇮🇸' },
+  { code: 'ig',    label: 'Igbo',                  flag: '🇳🇬' },
+  { code: 'id',    label: 'Indonesian',            flag: '🇮🇩' },
+  { code: 'ga',    label: 'Irish',                 flag: '🇮🇪' },
+  { code: 'it',    label: 'Italian',               flag: '🇮🇹' },
+  { code: 'ja',    label: 'Japanese',              flag: '🇯🇵' },
+  { code: 'kn',    label: 'Kannada',               flag: '🇮🇳' },
+  { code: 'km',    label: 'Khmer',                 flag: '🇰🇭' },
+  { code: 'ko',    label: 'Korean',                flag: '🇰🇷' },
+  { code: 'ky',    label: 'Kyrgyz',                flag: '🇰🇬' },
+  { code: 'lo',    label: 'Lao',                   flag: '🇱🇦' },
+  { code: 'lv',    label: 'Latvian',               flag: '🇱🇻' },
+  { code: 'ln',    label: 'Lingala',               flag: '🇨🇩' },
+  { code: 'lt',    label: 'Lithuanian',            flag: '🇱🇹' },
+  { code: 'lb',    label: 'Luxembourgish',         flag: '🇱🇺' },
+  { code: 'mk',    label: 'Macedonian',            flag: '🇲🇰' },
+  { code: 'ms',    label: 'Malay',                 flag: '🇲🇾' },
+  { code: 'ml',    label: 'Malayalam',             flag: '🇮🇳' },
+  { code: 'mt',    label: 'Maltese',               flag: '🇲🇹' },
+  { code: 'mr',    label: 'Marathi',               flag: '🇮🇳' },
+  { code: 'mn',    label: 'Mongolian',             flag: '🇲🇳' },
+  { code: 'ne',    label: 'Nepali',                flag: '🇳🇵' },
+  { code: 'no',    label: 'Norwegian',             flag: '🇳🇴' },
+  { code: 'or',    label: 'Odia',                  flag: '🇮🇳' },
+  { code: 'fa',    label: 'Persian',               flag: '🇮🇷' },
+  { code: 'pl',    label: 'Polish',                flag: '🇵🇱' },
+  { code: 'pt',    label: 'Portuguese',            flag: '🇵🇹' },
+  { code: 'pa',    label: 'Punjabi',               flag: '🇮🇳' },
+  { code: 'ro',    label: 'Romanian',              flag: '🇷🇴' },
+  { code: 'ru',    label: 'Russian',               flag: '🇷🇺' },
+  { code: 'gd',    label: 'Scots Gaelic',          flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+  { code: 'sr',    label: 'Serbian',               flag: '🇷🇸' },
+  { code: 'sk',    label: 'Slovak',                flag: '🇸🇰' },
+  { code: 'sl',    label: 'Slovenian',             flag: '🇸🇮' },
+  { code: 'so',    label: 'Somali',                flag: '🇸🇴' },
+  { code: 'es',    label: 'Spanish',               flag: '🇪🇸' },
+  { code: 'sw',    label: 'Swahili',               flag: '🇰🇪' },
+  { code: 'sv',    label: 'Swedish',               flag: '🇸🇪' },
+  { code: 'tl',    label: 'Tagalog',               flag: '🇵🇭' },
+  { code: 'tg',    label: 'Tajik',                 flag: '🇹🇯' },
+  { code: 'ta',    label: 'Tamil',                 flag: '🇮🇳' },
+  { code: 'te',    label: 'Telugu',                flag: '🇮🇳' },
+  { code: 'th',    label: 'Thai',                  flag: '🇹🇭' },
+  { code: 'tr',    label: 'Turkish',               flag: '🇹🇷' },
+  { code: 'uk',    label: 'Ukrainian',             flag: '🇺🇦' },
+  { code: 'ur',    label: 'Urdu',                  flag: '🇵🇰' },
+  { code: 'uz',    label: 'Uzbek',                 flag: '🇺🇿' },
+  { code: 'vi',    label: 'Vietnamese',            flag: '🇻🇳' },
+  { code: 'cy',    label: 'Welsh',                 flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿' },
+  { code: 'zu',    label: 'Zulu',                  flag: '🇿🇦' },
+];
+
+// Per-language runtime state
+// availability: 'checking' | 'available' | 'downloadable' | 'downloading' | 'unavailable'
+const langState = {};
+for (const l of SUPPORTED_LANGUAGES) {
+  langState[l.code] = { availability: 'checking', translator: null, testDebounce: null };
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function setStep(id, state, message) {
@@ -40,6 +134,277 @@ function detectAPI() {
   return null;
 }
 
+async function getAvailability(detected, code) {
+  if (detected.shape === 'legacy') {
+    const r = await detected.api.canTranslate({ sourceLanguage: 'en', targetLanguage: code });
+    return r === 'readily' ? 'available' : r === 'after-download' ? 'downloadable' : 'unavailable';
+  }
+  return detected.api.availability({ sourceLanguage: 'en', targetLanguage: code });
+}
+
+async function createTranslator(detected, code) {
+  if (detected.shape === 'legacy') {
+    return detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: code });
+  }
+  return detected.api.create({ sourceLanguage: 'en', targetLanguage: code });
+}
+
+// ── lang-row DOM helpers ───────────────────────────────────────────────────────
+
+function getChipClass(availability) {
+  return {
+    checking:    'chip-checking',
+    available:   'chip-available',
+    downloading: 'chip-downloading',
+    downloadable:'chip-unavailable',
+    unavailable: 'chip-unavailable',
+  }[availability] ?? 'chip-checking';
+}
+
+function getChipLabel(availability) {
+  return {
+    checking:    'Checking…',
+    available:   'Ready',
+    downloading: 'Downloading…',
+    downloadable:'Not downloaded',
+    unavailable: 'Unavailable',
+  }[availability] ?? 'Checking…';
+}
+
+function updateLangRow(code) {
+  const chip     = document.getElementById('chip-' + code);
+  const btn      = document.getElementById('dl-btn-' + code);
+  const progress = document.getElementById('progress-' + code);
+  const row      = document.getElementById('lang-row-' + code);
+  if (!chip || !btn) return;
+
+  const av = langState[code].availability;
+  chip.className = 'lang-status-chip ' + getChipClass(av);
+  chip.textContent = getChipLabel(av);
+
+  const isDownloading = av === 'downloading';
+  if (progress) progress.style.display = isDownloading ? '' : 'none';
+  if (row) row.classList.toggle('is-downloading', isDownloading);
+
+  if (av === 'available') {
+    btn.style.display = 'none';
+  } else if (av === 'downloadable') {
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Download';
+    btn.className = 'lang-dl-btn';
+  } else if (isDownloading) {
+    btn.style.display = 'none';
+  } else {
+    // unavailable / checking — offer to open internals page
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Open Chrome download page';
+    btn.className = 'lang-dl-btn btn-open';
+  }
+
+  sortLangRows();
+  filterLangRows();
+}
+
+// Sort priority: available → downloadable → downloading → checking → unavailable
+// Within each group: alphabetical by label.
+const SORT_PRIORITY = { available: 0, downloadable: 1, downloading: 2, checking: 3, unavailable: 4 };
+
+function sortLangRows() {
+  const container = document.getElementById('lang-rows');
+  const rows = Array.from(container.querySelectorAll('.lang-row'));
+
+  rows.sort((a, b) => {
+    const codeA = a.id.slice('lang-row-'.length);
+    const codeB = b.id.slice('lang-row-'.length);
+    const pA = SORT_PRIORITY[langState[codeA]?.availability] ?? 3;
+    const pB = SORT_PRIORITY[langState[codeB]?.availability] ?? 3;
+    if (pA !== pB) return pA - pB;
+    const labelA = SUPPORTED_LANGUAGES.find(l => l.code === codeA)?.label ?? '';
+    const labelB = SUPPORTED_LANGUAGES.find(l => l.code === codeB)?.label ?? '';
+    return labelA.localeCompare(labelB);
+  });
+
+  rows.forEach(row => container.appendChild(row));
+}
+
+function filterLangRows() {
+  const query = (document.getElementById('lang-search')?.value ?? '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.lang-row');
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const code = row.id.slice('lang-row-'.length);
+    const lang = SUPPORTED_LANGUAGES.find(l => l.code === code);
+    const matches = !query ||
+      lang.label.toLowerCase().includes(query) ||
+      code.toLowerCase().includes(query);
+    row.style.display = matches ? '' : 'none';
+    if (matches) visibleCount++;
+  });
+
+  const noResults = document.getElementById('lang-no-results');
+  if (noResults) noResults.style.display = visibleCount === 0 && query ? '' : 'none';
+}
+
+function buildLangRows() {
+  const container = document.getElementById('lang-rows');
+  container.innerHTML = '';
+  for (const { code, label, flag } of SUPPORTED_LANGUAGES) {
+    const row = document.createElement('div');
+    row.className = 'lang-row';
+    row.id = 'lang-row-' + code;
+    row.innerHTML = `
+      <div class="lang-row-main">
+        <div class="lang-row-info">
+          <span class="lang-flag">${flag}</span>
+          <span class="lang-name">${label}</span>
+          <span class="lang-status-chip chip-checking" id="chip-${code}">Checking…</span>
+        </div>
+        <button class="lang-dl-btn" id="dl-btn-${code}" style="display:none">Download</button>
+      </div>
+      <div id="progress-${code}" style="display:none; margin-top:0.6rem;">
+        <div class="progress-wrap" style="margin-top:0;">
+          <div class="progress-bar indeterminate"></div>
+        </div>
+        <p style="font-size:0.75rem; color:#a78bfa; margin-top:0.35rem;">
+          Downloading translation model — this may take a minute…
+        </p>
+      </div>
+    `;
+    container.appendChild(row);
+
+    document.getElementById('dl-btn-' + code).addEventListener('click', () => {
+      handleDownloadClick(code);
+    });
+  }
+}
+
+async function handleDownloadClick(code) {
+  const av = langState[code].availability;
+  const detected = detectAPI();
+
+  if (av === 'unavailable' || av === 'checking' || !detected) {
+    // Can't use chrome.tabs in a plain HTML page opened outside extension context,
+    // but setup.html IS served from the extension, so chrome APIs are available.
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
+      chrome.tabs.create({ url: 'chrome://on-device-translation-internals/' });
+    } else {
+      window.open('chrome://on-device-translation-internals/', '_blank');
+    }
+    return;
+  }
+
+  if (av === 'downloadable') {
+    langState[code].availability = 'downloading';
+    updateLangRow(code);
+    try {
+      await createTranslator(detected, code);
+      // Polling loop will detect completion.
+    } catch (e) {
+      langState[code].availability = 'unavailable';
+      updateLangRow(code);
+    }
+  }
+}
+
+// ── live test rows ─────────────────────────────────────────────────────────────
+
+function buildTestRows() {
+  const container   = document.getElementById('test-rows');
+  const placeholder = document.getElementById('test-placeholder');
+  const ready = SUPPORTED_LANGUAGES.filter(({ code }) => langState[code].availability === 'available');
+
+  placeholder.style.display = ready.length === 0 ? '' : 'none';
+
+  for (const { code, label, flag } of ready) {
+    if (document.getElementById('test-row-' + code)) continue; // already exists — don't recreate
+
+    const row = document.createElement('div');
+    row.className = 'test-row';
+    row.id = 'test-row-' + code;
+    row.innerHTML = `
+      <span class="lang-flag">${flag}</span>
+      <span class="lang-name">${label}</span>
+      <input class="test-input" id="test-input-${code}" type="text" value="Hello" placeholder="Type English…" />
+      <span class="test-arrow">→</span>
+      <span class="test-result pending" id="test-result-${code}">translating…</span>
+    `;
+    container.appendChild(row);
+
+    const input = document.getElementById('test-input-' + code);
+    input.addEventListener('input', () => scheduleTest(code));
+    // Run immediately
+    runTest(code, input.value);
+  }
+}
+
+function scheduleTest(code) {
+  clearTimeout(langState[code].testDebounce);
+  langState[code].testDebounce = setTimeout(() => {
+    const input = document.getElementById('test-input-' + code);
+    if (input) runTest(code, input.value);
+  }, 400);
+}
+
+async function runTest(code, text) {
+  const resultEl = document.getElementById('test-result-' + code);
+  if (!resultEl) return;
+  if (!text.trim()) { resultEl.className = 'test-result pending'; resultEl.textContent = '…'; return; }
+
+  resultEl.className = 'test-result pending';
+  resultEl.textContent = 'translating…';
+
+  const detected = detectAPI();
+  if (!detected) { resultEl.className = 'test-result error'; resultEl.textContent = 'API unavailable'; return; }
+
+  try {
+    let t = langState[code].translator;
+    if (!t) {
+      t = await createTranslator(detected, code);
+      langState[code].translator = t;
+    }
+    const result = await t.translate(text);
+    // Check the input hasn't changed while we were awaiting
+    const currentInput = document.getElementById('test-input-' + code);
+    if (currentInput && currentInput.value !== text) return; // stale
+    resultEl.className = 'test-result';
+    resultEl.textContent = result;
+  } catch (e) {
+    resultEl.className = 'test-result error';
+    resultEl.textContent = 'Error: ' + e;
+  }
+}
+
+// ── step-3/4 state machine ─────────────────────────────────────────────────────
+
+function updateModelStep() {
+  const allAvailable   = SUPPORTED_LANGUAGES.every(({ code }) => langState[code].availability === 'available');
+  const anyAvailable   = SUPPORTED_LANGUAGES.some(({ code }) => langState[code].availability === 'available');
+  const anyDownloading = SUPPORTED_LANGUAGES.some(({ code }) => langState[code].availability === 'downloading');
+  const anyChecking    = SUPPORTED_LANGUAGES.some(({ code }) => langState[code].availability === 'checking');
+
+  if (allAvailable) {
+    setStep('model', 'ok', 'All language models ready ✓');
+    setStep('test', 'ok', 'Live tests passed ✓');
+    showSuccess();
+  } else if (anyAvailable) {
+    setStep('model', 'active', 'Some language models are ready. Download more or proceed.');
+    setStep('test', 'active', 'Testing downloaded languages…');
+  } else if (anyDownloading) {
+    setStep('model', 'active', 'Downloading… this page will update automatically when done.');
+    setStep('test', '', '');
+  } else if (anyChecking) {
+    // still waiting
+  } else {
+    setStep('model', 'active', 'Select languages to download below.');
+    setStep('test', '', '');
+  }
+
+  buildTestRows();
+}
+
 // ── main diagnostics ──────────────────────────────────────────────────────────
 
 async function runChecks() {
@@ -68,7 +433,6 @@ async function runChecks() {
   const detected = detectAPI();
 
   if (!detected) {
-    // Chrome 131–137 needs flags; 138+ should have Translator built-in.
     if (ver >= 138) {
       setStep('flags', 'error',
         `Chrome ${ver} should have window.Translator built-in but it's missing. ` +
@@ -78,8 +442,6 @@ async function runChecks() {
         'No translation API found. Enable both flags above and relaunch Chrome.');
     }
     setStep('model', '', '');
-    document.getElementById('status-model').style.display = 'none';
-    document.getElementById('progress-wrap').style.display = 'none';
     return;
   }
 
@@ -90,58 +452,26 @@ async function runChecks() {
   }[detected.shape];
   setStep('flags', 'ok', `API detected: ${shapeLabel} ✓`);
 
-  // ── Step 3: Language model availability ───────────────────────────────────
-  document.getElementById('status-model').style.display = '';
-  let availability;
-  try {
-    if (detected.shape === 'legacy') {
-      // Old API uses canTranslate() returning 'readily'|'after-download'|'no'
-      const r = await detected.api.canTranslate({ sourceLanguage: 'en', targetLanguage: 'es' });
-      availability = r === 'readily' ? 'available' : r === 'after-download' ? 'downloadable' : 'unavailable';
-    } else {
-      availability = await detected.api.availability({ sourceLanguage: 'en', targetLanguage: 'es' });
-    }
-  } catch (e) {
-    setStep('model', 'error', 'availability check threw: ' + e);
-    return;
-  }
-
-  const progressWrap = document.getElementById('progress-wrap');
-  const progressBar  = document.getElementById('progress-bar');
-
-  if (availability === 'available') {
-    progressWrap.style.display = 'none';
+  // ── Step 3 & 4: Per-language availability + test rows ─────────────────────
+  await Promise.all(SUPPORTED_LANGUAGES.map(async ({ code }) => {
     try {
-      const createFn = detected.shape === 'legacy'
-        ? () => detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: 'es' })
-        : () => detected.api.create({ sourceLanguage: 'en', targetLanguage: 'es' });
-      const t      = await createFn();
-      const result = await t.translate('Hello');
-      setStep('model', 'ok', `Model ready — test: "Hello" → "${result}" ✓`);
-      showSuccess();
+      const av = await getAvailability(detected, code);
+      langState[code].availability = av;
+
+      // If we just became available and have no translator cached yet, create one
+      // so the live test tab can use it without a user-gesture requirement.
+      if (av === 'available' && !langState[code].translator) {
+        try {
+          langState[code].translator = await createTranslator(detected, code);
+        } catch (_) { /* ignore — test row will retry */ }
+      }
     } catch (e) {
-      setStep('model', 'error', 'create() / translate() failed: ' + e);
+      langState[code].availability = 'unavailable';
     }
-    return;
-  }
+    updateLangRow(code);
+  }));
 
-  if (availability === 'downloadable') {
-    progressWrap.style.display = 'none';
-    setStep('model', 'active', 'Model not downloaded yet. Click the button below to start the download.');
-    document.getElementById('download-btn-wrap').style.display = '';
-    return;
-  }
-
-  if (availability === 'downloading') {
-    progressWrap.style.display = '';
-    progressBar.className = 'progress-bar indeterminate';
-    setStep('model', 'active', 'Downloading… this page will update automatically when done.');
-    return;
-  }
-
-  setStep('model', 'error',
-    '"unavailable" — try enabling chrome://flags/#optimization-guide-on-device-model → ' +
-    'Enabled BypassPerfRequirement, then relaunch Chrome.');
+  updateModelStep();
 }
 
 function showSuccess() {
@@ -158,27 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => copyText(btn.dataset.target, btn));
   });
 
-  // Download button — must be triggered by a user gesture so Chrome allows
-  // create() to initiate the model download.
-  document.getElementById('download-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('download-btn');
-    btn.disabled = true;
-    btn.textContent = 'Downloading…';
+  buildLangRows();
 
-    const detected = detectAPI();
-    if (!detected) return;
-    try {
-      const createFn = detected.shape === 'legacy'
-        ? () => detected.api.createTranslator({ sourceLanguage: 'en', targetLanguage: 'es' })
-        : () => detected.api.create({ sourceLanguage: 'en', targetLanguage: 'es' });
-      await createFn();
-      // Download kicked off — polling loop will detect when it becomes available.
-    } catch (e) {
-      setStep('model', 'error', 'Download failed: ' + e);
-      btn.disabled = false;
-      btn.textContent = 'Try again';
-    }
-  });
+  document.getElementById('lang-search').addEventListener('input', filterLangRows);
 
   runChecks();
   setInterval(runChecks, 3000);

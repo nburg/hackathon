@@ -4,227 +4,228 @@
  * Database Analogy: Like a reference/lookup table with static data
  */
 
+// ── Language word lists ──────────────────────────────────────────────────────
+import { TOP_200_COMMON_WORDS_ES } from './constants-spanish';
+import { TOP_200_COMMON_WORDS_TA } from './constants-tamil';
+import { TOP_200_COMMON_WORDS_AF } from './constants-af';
+import { TOP_200_COMMON_WORDS_SQ } from './constants-sq';
+import { TOP_200_COMMON_WORDS_AM } from './constants-am';
+import { TOP_200_COMMON_WORDS_AR } from './constants-ar';
+import { TOP_200_COMMON_WORDS_AZ } from './constants-az';
+import { TOP_200_COMMON_WORDS_EU } from './constants-eu';
+import { TOP_200_COMMON_WORDS_BE } from './constants-be';
+import { TOP_200_COMMON_WORDS_BN } from './constants-bn';
+import { TOP_200_COMMON_WORDS_BS } from './constants-bs';
+import { TOP_200_COMMON_WORDS_BG } from './constants-bg';
+import { TOP_200_COMMON_WORDS_MY } from './constants-my';
+import { TOP_200_COMMON_WORDS_CA } from './constants-ca';
+import { TOP_200_COMMON_WORDS_ZH_CN } from './constants-zh-CN';
+import { TOP_200_COMMON_WORDS_ZH_TW } from './constants-zh-TW';
+import { TOP_200_COMMON_WORDS_HR } from './constants-hr';
+import { TOP_200_COMMON_WORDS_CS } from './constants-cs';
+import { TOP_200_COMMON_WORDS_DA } from './constants-da';
+import { TOP_200_COMMON_WORDS_NL } from './constants-nl';
+import { TOP_200_COMMON_WORDS_ET } from './constants-et';
+import { TOP_200_COMMON_WORDS_FIL } from './constants-fil';
+import { TOP_200_COMMON_WORDS_FI } from './constants-fi';
+import { TOP_200_COMMON_WORDS_FR } from './constants-fr';
+import { TOP_200_COMMON_WORDS_FY } from './constants-fy';
+import { TOP_200_COMMON_WORDS_GL } from './constants-gl';
+import { TOP_200_COMMON_WORDS_KA } from './constants-ka';
+import { TOP_200_COMMON_WORDS_DE } from './constants-de';
+import { TOP_200_COMMON_WORDS_EL } from './constants-el';
+import { TOP_200_COMMON_WORDS_GU } from './constants-gu';
+import { TOP_200_COMMON_WORDS_HA } from './constants-ha';
+import { TOP_200_COMMON_WORDS_HE } from './constants-he';
+import { TOP_200_COMMON_WORDS_HI } from './constants-hi';
+import { TOP_200_COMMON_WORDS_HU } from './constants-hu';
+import { TOP_200_COMMON_WORDS_IS } from './constants-is';
+import { TOP_200_COMMON_WORDS_IG } from './constants-ig';
+import { TOP_200_COMMON_WORDS_ID } from './constants-id';
+import { TOP_200_COMMON_WORDS_GA } from './constants-ga';
+import { TOP_200_COMMON_WORDS_IT } from './constants-it';
+import { TOP_200_COMMON_WORDS_JA } from './constants-ja';
+import { TOP_200_COMMON_WORDS_KN } from './constants-kn';
+import { TOP_200_COMMON_WORDS_KM } from './constants-km';
+import { TOP_200_COMMON_WORDS_KO } from './constants-ko';
+import { TOP_200_COMMON_WORDS_KY } from './constants-ky';
+import { TOP_200_COMMON_WORDS_LO } from './constants-lo';
+import { TOP_200_COMMON_WORDS_LV } from './constants-lv';
+import { TOP_200_COMMON_WORDS_LN } from './constants-ln';
+import { TOP_200_COMMON_WORDS_LT } from './constants-lt';
+import { TOP_200_COMMON_WORDS_LB } from './constants-lb';
+import { TOP_200_COMMON_WORDS_MK } from './constants-mk';
+import { TOP_200_COMMON_WORDS_MS } from './constants-ms';
+import { TOP_200_COMMON_WORDS_ML } from './constants-ml';
+import { TOP_200_COMMON_WORDS_MT } from './constants-mt';
+import { TOP_200_COMMON_WORDS_MR } from './constants-mr';
+import { TOP_200_COMMON_WORDS_MN } from './constants-mn';
+import { TOP_200_COMMON_WORDS_NE } from './constants-ne';
+import { TOP_200_COMMON_WORDS_NO } from './constants-no';
+import { TOP_200_COMMON_WORDS_OR } from './constants-or';
+import { TOP_200_COMMON_WORDS_FA } from './constants-fa';
+import { TOP_200_COMMON_WORDS_PL } from './constants-pl';
+import { TOP_200_COMMON_WORDS_PT } from './constants-pt';
+import { TOP_200_COMMON_WORDS_PA } from './constants-pa';
+import { TOP_200_COMMON_WORDS_RO } from './constants-ro';
+import { TOP_200_COMMON_WORDS_RU } from './constants-ru';
+import { TOP_200_COMMON_WORDS_GD } from './constants-gd';
+import { TOP_200_COMMON_WORDS_SR } from './constants-sr';
+import { TOP_200_COMMON_WORDS_SK } from './constants-sk';
+import { TOP_200_COMMON_WORDS_SL } from './constants-sl';
+import { TOP_200_COMMON_WORDS_SO } from './constants-so';
+import { TOP_200_COMMON_WORDS_SW } from './constants-sw';
+import { TOP_200_COMMON_WORDS_SV } from './constants-sv';
+import { TOP_200_COMMON_WORDS_TL } from './constants-tl';
+import { TOP_200_COMMON_WORDS_TG } from './constants-tg';
+import { TOP_200_COMMON_WORDS_TE } from './constants-te';
+import { TOP_200_COMMON_WORDS_TH } from './constants-th';
+import { TOP_200_COMMON_WORDS_TR } from './constants-tr';
+import { TOP_200_COMMON_WORDS_UK } from './constants-uk';
+import { TOP_200_COMMON_WORDS_UR } from './constants-ur';
+import { TOP_200_COMMON_WORDS_UZ } from './constants-uz';
+import { TOP_200_COMMON_WORDS_VI } from './constants-vi';
+import { TOP_200_COMMON_WORDS_CY } from './constants-cy';
+import { TOP_200_COMMON_WORDS_ZU } from './constants-zu';
+
+// Re-export all language lists
+export {
+  TOP_200_COMMON_WORDS_ES, TOP_200_COMMON_WORDS_TA,
+  TOP_200_COMMON_WORDS_AF, TOP_200_COMMON_WORDS_SQ, TOP_200_COMMON_WORDS_AM,
+  TOP_200_COMMON_WORDS_AR, TOP_200_COMMON_WORDS_AZ, TOP_200_COMMON_WORDS_EU,
+  TOP_200_COMMON_WORDS_BE, TOP_200_COMMON_WORDS_BN, TOP_200_COMMON_WORDS_BS,
+  TOP_200_COMMON_WORDS_BG, TOP_200_COMMON_WORDS_MY, TOP_200_COMMON_WORDS_CA,
+  TOP_200_COMMON_WORDS_ZH_CN, TOP_200_COMMON_WORDS_ZH_TW, TOP_200_COMMON_WORDS_HR,
+  TOP_200_COMMON_WORDS_CS, TOP_200_COMMON_WORDS_DA, TOP_200_COMMON_WORDS_NL,
+  TOP_200_COMMON_WORDS_ET, TOP_200_COMMON_WORDS_FIL, TOP_200_COMMON_WORDS_FI,
+  TOP_200_COMMON_WORDS_FR, TOP_200_COMMON_WORDS_FY, TOP_200_COMMON_WORDS_GL,
+  TOP_200_COMMON_WORDS_KA, TOP_200_COMMON_WORDS_DE, TOP_200_COMMON_WORDS_EL,
+  TOP_200_COMMON_WORDS_GU, TOP_200_COMMON_WORDS_HA, TOP_200_COMMON_WORDS_HE,
+  TOP_200_COMMON_WORDS_HI, TOP_200_COMMON_WORDS_HU, TOP_200_COMMON_WORDS_IS,
+  TOP_200_COMMON_WORDS_IG, TOP_200_COMMON_WORDS_ID, TOP_200_COMMON_WORDS_GA,
+  TOP_200_COMMON_WORDS_IT, TOP_200_COMMON_WORDS_JA, TOP_200_COMMON_WORDS_KN,
+  TOP_200_COMMON_WORDS_KM, TOP_200_COMMON_WORDS_KO, TOP_200_COMMON_WORDS_KY,
+  TOP_200_COMMON_WORDS_LO, TOP_200_COMMON_WORDS_LV, TOP_200_COMMON_WORDS_LN,
+  TOP_200_COMMON_WORDS_LT, TOP_200_COMMON_WORDS_LB, TOP_200_COMMON_WORDS_MK,
+  TOP_200_COMMON_WORDS_MS, TOP_200_COMMON_WORDS_ML, TOP_200_COMMON_WORDS_MT,
+  TOP_200_COMMON_WORDS_MR, TOP_200_COMMON_WORDS_MN, TOP_200_COMMON_WORDS_NE,
+  TOP_200_COMMON_WORDS_NO, TOP_200_COMMON_WORDS_OR, TOP_200_COMMON_WORDS_FA,
+  TOP_200_COMMON_WORDS_PL, TOP_200_COMMON_WORDS_PT, TOP_200_COMMON_WORDS_PA,
+  TOP_200_COMMON_WORDS_RO, TOP_200_COMMON_WORDS_RU, TOP_200_COMMON_WORDS_GD,
+  TOP_200_COMMON_WORDS_SR, TOP_200_COMMON_WORDS_SK, TOP_200_COMMON_WORDS_SL,
+  TOP_200_COMMON_WORDS_SO, TOP_200_COMMON_WORDS_SW, TOP_200_COMMON_WORDS_SV,
+  TOP_200_COMMON_WORDS_TL, TOP_200_COMMON_WORDS_TG, TOP_200_COMMON_WORDS_TE,
+  TOP_200_COMMON_WORDS_TH, TOP_200_COMMON_WORDS_TR, TOP_200_COMMON_WORDS_UK,
+  TOP_200_COMMON_WORDS_UR, TOP_200_COMMON_WORDS_UZ, TOP_200_COMMON_WORDS_VI,
+  TOP_200_COMMON_WORDS_CY, TOP_200_COMMON_WORDS_ZU,
+};
+
+// Backward-compatible alias used by storage-manager.ts and index.ts
+export const TOP_200_COMMON_WORDS: readonly string[] = TOP_200_COMMON_WORDS_ES;
+
+// ── Language dispatch map ────────────────────────────────────────────────────
+const LANGUAGE_WORD_MAP: Readonly<Record<string, readonly string[]>> = {
+  af: TOP_200_COMMON_WORDS_AF,
+  sq: TOP_200_COMMON_WORDS_SQ,
+  am: TOP_200_COMMON_WORDS_AM,
+  ar: TOP_200_COMMON_WORDS_AR,
+  az: TOP_200_COMMON_WORDS_AZ,
+  eu: TOP_200_COMMON_WORDS_EU,
+  be: TOP_200_COMMON_WORDS_BE,
+  bn: TOP_200_COMMON_WORDS_BN,
+  bs: TOP_200_COMMON_WORDS_BS,
+  bg: TOP_200_COMMON_WORDS_BG,
+  my: TOP_200_COMMON_WORDS_MY,
+  ca: TOP_200_COMMON_WORDS_CA,
+  'zh-CN': TOP_200_COMMON_WORDS_ZH_CN,
+  'zh-TW': TOP_200_COMMON_WORDS_ZH_TW,
+  hr: TOP_200_COMMON_WORDS_HR,
+  cs: TOP_200_COMMON_WORDS_CS,
+  da: TOP_200_COMMON_WORDS_DA,
+  nl: TOP_200_COMMON_WORDS_NL,
+  et: TOP_200_COMMON_WORDS_ET,
+  fil: TOP_200_COMMON_WORDS_FIL,
+  fi: TOP_200_COMMON_WORDS_FI,
+  fr: TOP_200_COMMON_WORDS_FR,
+  fy: TOP_200_COMMON_WORDS_FY,
+  gl: TOP_200_COMMON_WORDS_GL,
+  ka: TOP_200_COMMON_WORDS_KA,
+  de: TOP_200_COMMON_WORDS_DE,
+  el: TOP_200_COMMON_WORDS_EL,
+  gu: TOP_200_COMMON_WORDS_GU,
+  ha: TOP_200_COMMON_WORDS_HA,
+  he: TOP_200_COMMON_WORDS_HE,
+  hi: TOP_200_COMMON_WORDS_HI,
+  hu: TOP_200_COMMON_WORDS_HU,
+  is: TOP_200_COMMON_WORDS_IS,
+  ig: TOP_200_COMMON_WORDS_IG,
+  id: TOP_200_COMMON_WORDS_ID,
+  ga: TOP_200_COMMON_WORDS_GA,
+  it: TOP_200_COMMON_WORDS_IT,
+  ja: TOP_200_COMMON_WORDS_JA,
+  kn: TOP_200_COMMON_WORDS_KN,
+  km: TOP_200_COMMON_WORDS_KM,
+  ko: TOP_200_COMMON_WORDS_KO,
+  ky: TOP_200_COMMON_WORDS_KY,
+  lo: TOP_200_COMMON_WORDS_LO,
+  lv: TOP_200_COMMON_WORDS_LV,
+  ln: TOP_200_COMMON_WORDS_LN,
+  lt: TOP_200_COMMON_WORDS_LT,
+  lb: TOP_200_COMMON_WORDS_LB,
+  mk: TOP_200_COMMON_WORDS_MK,
+  ms: TOP_200_COMMON_WORDS_MS,
+  ml: TOP_200_COMMON_WORDS_ML,
+  mt: TOP_200_COMMON_WORDS_MT,
+  mr: TOP_200_COMMON_WORDS_MR,
+  mn: TOP_200_COMMON_WORDS_MN,
+  ne: TOP_200_COMMON_WORDS_NE,
+  no: TOP_200_COMMON_WORDS_NO,
+  or: TOP_200_COMMON_WORDS_OR,
+  fa: TOP_200_COMMON_WORDS_FA,
+  pl: TOP_200_COMMON_WORDS_PL,
+  pt: TOP_200_COMMON_WORDS_PT,
+  pa: TOP_200_COMMON_WORDS_PA,
+  ro: TOP_200_COMMON_WORDS_RO,
+  ru: TOP_200_COMMON_WORDS_RU,
+  gd: TOP_200_COMMON_WORDS_GD,
+  sr: TOP_200_COMMON_WORDS_SR,
+  sk: TOP_200_COMMON_WORDS_SK,
+  sl: TOP_200_COMMON_WORDS_SL,
+  so: TOP_200_COMMON_WORDS_SO,
+  es: TOP_200_COMMON_WORDS_ES,
+  sw: TOP_200_COMMON_WORDS_SW,
+  sv: TOP_200_COMMON_WORDS_SV,
+  tl: TOP_200_COMMON_WORDS_TL,
+  tg: TOP_200_COMMON_WORDS_TG,
+  ta: TOP_200_COMMON_WORDS_TA,
+  te: TOP_200_COMMON_WORDS_TE,
+  th: TOP_200_COMMON_WORDS_TH,
+  tr: TOP_200_COMMON_WORDS_TR,
+  uk: TOP_200_COMMON_WORDS_UK,
+  ur: TOP_200_COMMON_WORDS_UR,
+  uz: TOP_200_COMMON_WORDS_UZ,
+  vi: TOP_200_COMMON_WORDS_VI,
+  cy: TOP_200_COMMON_WORDS_CY,
+  zu: TOP_200_COMMON_WORDS_ZU,
+};
+
 /**
- * Top 200 most common Spanish words
- *
- * Database Analogy: Like a reference table (SELECT * FROM common_words ORDER BY frequency)
- * Used for Phase 1 -> Phase 2 transition trigger
- *
- * When user knows 70% of these words (pKnown >= 0.85), we switch to sentence-level translation
+ * Returns the top-200 reference word list for a given target language code.
+ * Falls back to Spanish if the language is unrecognized.
  */
-export const TOP_200_COMMON_WORDS = [
-  // Articles, pronouns, basic verbs (most frequent)
-  'el',
-  'la',
-  'de',
-  'que',
-  'y',
-  'a',
-  'en',
-  'un',
-  'ser',
-  'se',
-  'no',
-  'haber',
-  'por',
-  'con',
-  'su',
-  'para',
-  'como',
-  'estar',
-  'tener',
-  'le',
-  'lo',
-  'todo',
-  'pero',
-  'más',
-  'hacer',
-  'o',
-  'poder',
-  'decir',
-  'este',
-  'ir',
-  'otro',
-  'ese',
-  'si',
-  'me',
-  'ya',
-  'ver',
-  'porque',
-  'dar',
-  'cuando',
-  'él',
-  'muy',
-  'sin',
-  'vez',
-  'mucho',
-  'saber',
-  'qué',
-  'sobre',
-  'mi',
-  'alguno',
-  'mismo',
-  'yo',
-  'también',
-  'hasta',
-  'año',
-  'dos',
-  'querer',
-  'entre',
-  'así',
-  'primero',
-  'desde',
-  'grande',
-  'eso',
-  'ni',
-  'nos',
-  'llegar',
-  'pasar',
-  'tiempo',
-  'ella',
-  'sí',
-  'día',
-  'uno',
-  'bien',
-  'poco',
-  'deber',
-  'entonces',
-  'poner',
-  'cosa',
-  'tanto',
-  'hombre',
-  'parecer',
-  'nuestro',
-  'tan',
-  'donde',
-  'ahora',
-  'parte',
-  'después',
-  'vida',
-  'quedar',
-  'siempre',
-  'creer',
-  'hablar',
-  'llevar',
-  'dejar',
-  'nada',
-  'cada',
-  'seguir',
-  'menos',
-  'nuevo',
-  'encontrar',
-  'algo',
-  'solo',
-  'decir',
-  'mundo',
-  'casa',
-  'último',
-  'salir',
-  'cual',
-  'centro',
-  'nosotros',
-  'llamar',
-  'venir',
-  'pensar',
-  'salir',
-  'volver',
-  'tomar',
-  'conocer',
-  'vivir',
-  'sentir',
-  'tratar',
-  'mirar',
-  'contar',
-  'empezar',
-  'esperar',
-  'buscar',
-  'existir',
-  'entrar',
-  'trabajar',
-  'escribir',
-  'perder',
-  'producir',
-  'ocurrir',
-  'entender',
-  'pedir',
-  'recibir',
-  'recordar',
-  'terminar',
-  'permitir',
-  'aparecer',
-  'conseguir',
-  'comenzar',
-  'servir',
-  'sacar',
-  'necesitar',
-  'mantener',
-  'resultar',
-  'leer',
-  'caer',
-  'cambiar',
-  'presentar',
-  'crear',
-  'abrir',
-  'considerar',
-  'oír',
-  'acabar',
-  'pueblo',
-  'manera',
-  'lugar',
-  'persona',
-  'nombre',
-  'mano',
-  'obra',
-  'parte',
-  'grupo',
-  'número',
-  'problema',
-  'agua',
-  'punto',
-  'guerra',
-  'mayor',
-  'derecho',
-  'gobierno',
-  'caso',
-  'país',
-  'mujer',
-  'hijo',
-  'empresa',
-  'muerte',
-  'amor',
-  'cuerpo',
-  'desarrollo',
-  'historia',
-  'momento',
-  'proceso',
-  'sistema',
-  'político',
-  'resultado',
-  'social',
-  'estado',
-  'ciudad',
-  'padre',
-  'trabajo',
-  'programa',
-  'servicio',
-  'España',
-  'presidente',
-  'información',
-  'presidente',
-  'Madrid',
-];
+export function getTop200ForLanguage(targetLanguage: string): readonly string[] {
+  return LANGUAGE_WORD_MAP[targetLanguage] ?? TOP_200_COMMON_WORDS_ES;
+}
+
+// ── Thresholds & config ──────────────────────────────────────────────────────
 
 /**
  * Threshold for Phase 1 -> Phase 2 transition
- *
- * Database Analogy: Like a configuration parameter (SELECT value FROM config WHERE param = 'phase2_threshold')
  */
 export const PHASE2_THRESHOLD = 0.7; // User must know 70% of top 200 words
 
 /**
  * Threshold for considering a word "known"
- *
- * Database Analogy: Like a WHERE clause constant (WHERE pKnown >= 0.85)
  */
 export const KNOWN_THRESHOLD = 0.85;
 
@@ -240,10 +241,6 @@ export const MAX_PKNOWN = 0.95;
 
 /**
  * Most common English words ordered by frequency (most frequent first).
- *
- * Used to give unseen words a variable starting priority: common words get
- * priority closer to 1.0, uncommon words closer to 0.5. Words not in this
- * list are treated as uncommon and receive a flat 0.5 starting priority.
  */
 export const COMMON_ENGLISH_WORDS: readonly string[] = [
   'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'it',
@@ -319,7 +316,6 @@ export const COMMON_ENGLISH_WORDS: readonly string[] = [
 
 /**
  * Precomputed rank map: word → 0-based index in COMMON_ENGLISH_WORDS.
- * Words with a lower rank number are more common.
  */
 export const ENGLISH_WORD_RANK: ReadonlyMap<string, number> = new Map(
   COMMON_ENGLISH_WORDS.map((w, i) => [w, i])
