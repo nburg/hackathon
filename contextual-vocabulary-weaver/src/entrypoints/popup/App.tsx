@@ -20,28 +20,39 @@ export default function App() {
     updateSettings,
   } = useSettings();
   const { vocabulary, loading: vocabLoading, error: vocabError } = useVocabulary();
-  const [disabling, setDisabling] = useState(false);
+  const [togglingSite, setTogglingSite] = useState(false);
+  const [currentHostname, setCurrentHostname] = useState<string | null>(null);
+
+  // Resolve the active tab's hostname once settings are loaded.
+  useState(() => {
+    chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      if (tab?.url) {
+        try { setCurrentHostname(new URL(tab.url).hostname); } catch { /* ignore */ }
+      }
+    });
+  });
 
   const openOptions = () => chrome.runtime.openOptionsPage();
   const openDashboard = () => chrome.tabs.create({ url: chrome.runtime.getURL('/dashboard.html') });
   const openSetup = () => chrome.tabs.create({ url: chrome.runtime.getURL('/setup.html') });
 
-  const disableOnThisSite = async () => {
-    setDisabling(true);
+  const toggleThisSite = async () => {
+    setTogglingSite(true);
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.url || !tab.id) return;
       const hostname = new URL(tab.url).hostname;
       const current = settings!.disabledSites || [];
-      if (!current.includes(hostname)) {
-        await updateSettings({ disabledSites: [...current, hostname] });
-      }
-      // Reload the tab so the content script re-runs and respects the new setting.
+      const isDisabled = current.includes(hostname);
+      const updated = isDisabled
+        ? current.filter((h) => h !== hostname)
+        : [...current, hostname];
+      await updateSettings({ disabledSites: updated });
       await chrome.tabs.reload(tab.id);
     } catch {
       // ignore tab query errors (e.g. on chrome:// pages)
     } finally {
-      setDisabling(false);
+      setTogglingSite(false);
     }
   };
 
@@ -82,6 +93,9 @@ export default function App() {
   const totalTracked = vocabulary.totalTracked;
   const progressPercent = totalTracked > 0 ? Math.round((wordsKnown / totalTracked) * 100) : 0;
   const languageLabel = LANGUAGE_LABELS[settings.language] ?? settings.language;
+  const siteIsDisabled = currentHostname
+    ? (settings.disabledSites || []).includes(currentHostname)
+    : false;
 
   return (
     <div className="w-80 p-4 space-y-4">
@@ -124,11 +138,11 @@ export default function App() {
         <Button
           fullWidth
           variant="secondary"
-          onClick={disableOnThisSite}
-          disabled={disabling}
-          aria-label="Disable extension on this website"
+          onClick={toggleThisSite}
+          disabled={togglingSite}
+          aria-label={siteIsDisabled ? 'Re-enable extension on this website' : 'Disable extension on this website'}
         >
-          Disable on This Site
+          {siteIsDisabled ? 'Re-enable on This Site' : 'Disable on This Site'}
         </Button>
         <Button fullWidth variant="secondary" onClick={openOptions} aria-label="Open settings">
           Settings
