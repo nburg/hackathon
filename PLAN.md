@@ -24,6 +24,12 @@ Nothing — can start immediately.
 
 ### Tasks
 - [ ] **WCAG 2 accessibility audit** — Review all React entrypoints (popup, options, dashboard) against [WCAG 2 guidelines](https://www.w3.org/WAI/standards-guidelines/wcag/): keyboard navigation, focus management, color contrast, ARIA labels on interactive elements, screen reader support for replaced words (`.cvw-word`, `.cvw-sentence`)
+- [ ] **Enable/disable toggle in popup** — Add an interactive toggle directly in `popup/App.tsx` so users can pause/resume without navigating to Settings (currently the indicator is display-only)
+- [ ] **Dynamic popup description** — `popup/App.tsx` line 57 hardcodes "Learn Spanish passively!"; derive the label from `settings.language` so it works for future languages
+- [ ] **Density slider clarity** — Show the computed percentage inline in `options/App.tsx` (e.g. "5% of words replaced") to remove ambiguity between the 1–10 integer scale and the percentage
+- [ ] **"Disable on this site" quick control** — Add a button in `popup/App.tsx` that appends the current tab's hostname to `siteRegexPatterns` via `src/lib/storage/api.ts`, avoiding the regex barrier in Settings
+- [ ] **Phase 2 transition notification** — Surface a popup badge change or browser notification when `checkAndTriggerPhase2` fires in `lib/storage-manager.ts`; wire the trigger through `src/entrypoints/background.ts`
+- [ ] **Hide Setup Guide for established users** — In `popup/App.tsx`, conditionally render the Setup Guide button only when `vocabulary.totalTracked === 0`
 
 ### Depends on
 Role 1 (duplicate `background.ts` cleanup) should be done first to avoid confusion, but UI work can proceed in parallel.
