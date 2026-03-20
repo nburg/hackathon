@@ -15,6 +15,7 @@ export interface Settings {
   enabledSites: string[]; // Array of domains where extension is enabled
   isEnabled: boolean; // Global toggle
   siteRegexPatterns: string[]; // Regex patterns — if non-empty, only matching URLs are altered
+  disabledSites: string[]; // Hostnames where extension is explicitly disabled
 }
 
 export interface VocabularyWord {

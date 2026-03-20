@@ -148,5 +148,6 @@ function getDefaultSettings(): Settings {
     enabledSites: [],
     isEnabled: true,
     siteRegexPatterns: [],
+    disabledSites: [],
   };
 }

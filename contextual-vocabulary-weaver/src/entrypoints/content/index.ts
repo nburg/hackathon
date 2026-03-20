@@ -33,6 +33,12 @@ export default defineContentScript({
       return;
     }
 
+    const hostname = window.location.hostname;
+    if ((settings.disabledSites || []).includes(hostname)) {
+      console.log('[CVW] Disabled on this site:', hostname);
+      return;
+    }
+
     // Inject CSS into page
     const styleElement = document.createElement('style');
     styleElement.textContent = styles;
