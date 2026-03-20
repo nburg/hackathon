@@ -129,6 +129,11 @@ When cutting a new release:
    npm run build
    ```
 
+Always make sure any codebase changes pass linting checks before pushing.
+
+---
+
+
 ## Extension Architecture
 
 The WXT extension uses Manifest V3 with React + Tailwind. All entrypoints are under `src/entrypoints/`.
