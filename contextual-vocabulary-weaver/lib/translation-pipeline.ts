@@ -1,4 +1,9 @@
-import { extractCandidates, filterCandidates, getSentenceForCandidate } from '@p3/index';
+import {
+  extractCandidates,
+  filterCandidates,
+  getSentenceForCandidate,
+  extractSimpleClauses,
+} from '@p3/index';
 import type { WordCandidate } from '@p3/types';
 import { getWordPriority, trackExposure, trackRecallFailure } from './index';
 
@@ -399,28 +404,60 @@ function replaceInDom(candidate: WordCandidate, translation: string): void {
 }
 
 /**
- * Groups word candidates into sentence candidates by (text node, sentence) pairs.
- * Deduplicates so each unique sentence within a text node is processed once.
+ * Groups word candidates into sentence candidates by (text node, translation-unit) pairs.
+ *
+ * A "translation unit" is either a full simple sentence or a single clause
+ * extracted from a complex/compound sentence:
+ *
+ *   - Simple sentence  → the whole sentence is the unit.
+ *   - Complex/compound → extractSimpleClauses() splits it; the word's
+ *     containing clause becomes the unit.  Words that don't fall inside
+ *     any extractable clause are skipped.
+ *
+ * Deduplicates so each unique unit within a text node is processed once.
  */
 function buildSentenceCandidates(candidates: WordCandidate[]): SentenceCandidate[] {
-  // Outer key: text node reference. Inner key: trimmed sentence string.
+  // Outer key: text node reference. Inner key: translation-unit string.
   const map = new Map<Text, Map<string, SentenceCandidate>>();
 
   for (const candidate of candidates) {
     const sentence = getSentenceForCandidate(candidate);
     if (!sentence) continue;
 
+    // Resolve the translation unit for this candidate.
+    const clauses = extractSimpleClauses(sentence);
+    if (clauses.length === 0) continue;
+
+    // If extractSimpleClauses returned the full sentence (already simple),
+    // use it directly.  Otherwise find which clause contains this word.
+    let unit: string;
+    if (clauses.length === 1 && clauses[0] === sentence) {
+      unit = sentence;
+    } else {
+      const nodeText = candidate.node.data;
+      const containing = clauses.find((clause) => {
+        const clauseStart = nodeText.indexOf(clause);
+        return (
+          clauseStart !== -1 &&
+          candidate.offset >= clauseStart &&
+          candidate.offset < clauseStart + clause.length
+        );
+      });
+      if (!containing) continue;
+      unit = containing;
+    }
+
     if (!map.has(candidate.node)) {
       map.set(candidate.node, new Map());
     }
     const nodeMap = map.get(candidate.node)!;
 
-    if (!nodeMap.has(sentence)) {
-      const offset = candidate.node.data.indexOf(sentence);
+    if (!nodeMap.has(unit)) {
+      const offset = candidate.node.data.indexOf(unit);
       if (offset === -1) continue;
-      nodeMap.set(sentence, { sentence, node: candidate.node, offset, words: [] });
+      nodeMap.set(unit, { sentence: unit, node: candidate.node, offset, words: [] });
     }
-    nodeMap.get(sentence)!.words.push(candidate);
+    nodeMap.get(unit)!.words.push(candidate);
   }
 
   return [...map.values()].flatMap((nodeMap) => [...nodeMap.values()]);

@@ -171,6 +171,93 @@ export function isWithinMultiWord(
 }
 
 /**
+ * Returns true if `sentence` is a simple sentence (one independent clause,
+ * no subordinate or relative clauses).
+ *
+ * Uses compromise to check three structural signals:
+ *
+ * 1. Subordinating conjunctions (#Subordinator): because, although, since,
+ *    when, if, while, unless, until, after, before, as, though, etc.
+ *    → their presence marks a complex sentence.
+ *
+ * 2. Relative clause opener: (who|which) immediately before a verb phrase.
+ *    → "the man who runs" is complex; "who" as a question word is less common
+ *    in body text and fine to reject conservatively.
+ *
+ * 3. Compound sentence pattern: a coordinating conjunction (and|but|or)
+ *    directly followed by a subject pronoun or proper noun then a verb.
+ *    → "she sang and he danced" is compound; "cats and dogs" is not.
+ *
+ * 4. Backstop: more than 2 finite verb phrases almost always indicates
+ *    multiple clauses (allowing 2 covers compound predicates like
+ *    "She ran and jumped").
+ */
+export function isSimpleSentence(sentence: string): boolean {
+  const doc = nlp(sentence);
+
+  // 1. Subordinating conjunction → complex sentence
+  if (doc.match('#Subordinator').found) return false;
+
+  // 2. Relative clause: (who|which) + verb phrase
+  if (doc.match('(who|which) #Verb+').found) return false;
+
+  // 3. Coordinating conjunction joining two independent clauses:
+  //    (and|but|or) + subject (pronoun or proper noun) + verb
+  if (doc.match('(and|but|or) (#Pronoun|#ProperNoun) #Verb').found) return false;
+
+  // 4. Verb count backstop
+  if (doc.verbs().length > 2) return false;
+
+  return true;
+}
+
+/**
+ * Splits a sentence into its component clauses and returns those that are
+ * structurally suitable for translation as independent units.
+ *
+ * - If the sentence is already simple, returns it unchanged: [sentence].
+ * - Otherwise, attempts two splitting strategies in order:
+ *
+ *   1. Subordinating conjunctions — the most reliable clause boundary
+ *      (because, although, since, while, when, if, unless, until,
+ *       after, before, though). Splits produce two or more parts.
+ *
+ *   2. Coordinating conjunctions (and, but, or, nor, yet, so) — only
+ *      used when BOTH sides of the split independently contain a verb,
+ *      i.e. it is a genuine compound sentence rather than a list.
+ *
+ *   In both cases each candidate chunk must be at least 4 characters
+ *   long and contain at least one verb to count as a valid clause.
+ *
+ * - Returns [] when no splittable clauses can be identified (caller
+ *   should skip the sentence entirely).
+ */
+export function extractSimpleClauses(sentence: string): string[] {
+  if (isSimpleSentence(sentence)) return [sentence];
+
+  // Strategy 1: split at subordinating conjunctions.
+  const subParts = sentence
+    .split(/\s+(?:because|although|though|since|while|when|if|unless|until|after|before)\s+/i)
+    .map((p) => p.trim())
+    .filter((p) => p.length >= 4 && nlp(p).verbs().length > 0);
+
+  if (subParts.length > 1) return subParts;
+
+  // Strategy 2: split at coordinating conjunctions only when both halves
+  // independently contain a verb (compound sentence, not a list).
+  const coordParts = sentence
+    .split(/\s+(?:and|but|or|nor|yet|so)\s+/i)
+    .map((p) => p.trim())
+    .filter((p) => p.length >= 4);
+
+  if (coordParts.length > 1 && coordParts.every((p) => nlp(p).verbs().length > 0)) {
+    return coordParts;
+  }
+
+  return [];
+}
+
+/**
  * Filters words that are suitable for translation
  * Returns only content words (nouns, verbs, adjectives, adverbs)
  */

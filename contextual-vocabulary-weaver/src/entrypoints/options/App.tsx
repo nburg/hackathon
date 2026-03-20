@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Settings } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,35 @@ export default function App() {
   const [patternError, setPatternError] = useState('');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [currentPhase, setCurrentPhase] = useState<1 | 2>(1);
+  const [phaseMessage, setPhaseMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    chrome.storage.local.get('settings').then((result) => {
+      const p5 = result['settings'] as { currentPhase?: 1 | 2 } | undefined;
+      setCurrentPhase(p5?.currentPhase ?? 1);
+    });
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+      if (area === 'local' && changes['settings']) {
+        const updated = changes['settings'].newValue as { currentPhase?: 1 | 2 } | undefined;
+        if (updated?.currentPhase) setCurrentPhase(updated.currentPhase);
+      }
+    };
+    chrome.storage.onChanged.addListener(listener);
+    return () => chrome.storage.onChanged.removeListener(listener);
+  }, []);
+
+  const forcePhase = async (phase: 1 | 2) => {
+    const result = await chrome.storage.local.get('settings');
+    const p5Current = (result['settings'] as Record<string, unknown>) ?? {};
+    await chrome.storage.local.set({ settings: { ...p5Current, currentPhase: phase } });
+    setPhaseMessage(
+      phase === 2
+        ? 'Phase 2 forced — reload any open tab to see sentence replacement.'
+        : 'Reset to Phase 1.'
+    );
+    setTimeout(() => setPhaseMessage(null), 4000);
+  };
 
   if (loading) {
     return <LoadingScreen message="Loading settings..." />;
@@ -201,6 +230,37 @@ export default function App() {
                 ))}
               </ul>
             )}
+          </Card>
+
+          {/* Developer Tools */}
+          <Card title="Developer Tools">
+            <p className="text-sm text-gray-600 mb-3">
+              Force the learning phase for testing. Phase 2 replaces entire sentences instead of
+              individual words.
+            </p>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-sm text-gray-700">
+                Current phase:{' '}
+                <span
+                  className={`font-semibold ${currentPhase === 2 ? 'text-purple-600' : 'text-blue-600'}`}
+                >
+                  Phase {currentPhase}
+                </span>
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="primary" onClick={() => forcePhase(2)} disabled={currentPhase === 2}>
+                Force Phase 2
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => forcePhase(1)}
+                disabled={currentPhase === 1}
+              >
+                Reset to Phase 1
+              </Button>
+            </div>
+            {phaseMessage && <p className="text-sm text-gray-600 mt-2 italic">{phaseMessage}</p>}
           </Card>
 
           {/* Info Banner */}

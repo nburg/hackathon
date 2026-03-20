@@ -28,6 +28,8 @@ export {
   detectMultiWordExpressions,
   isWithinMultiWord,
   filterContentWords,
+  isSimpleSentence,
+  extractSimpleClauses,
   type TaggedWord,
 } from './nlp/tagger.js';
 
