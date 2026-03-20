@@ -387,6 +387,14 @@ function createWordSpan(original: string, translation: string): HTMLSpanElement 
   span.textContent = translation;
   span.title = original; // fallback tooltip
 
+  // When the translation is shorter than the original, reserve the original's
+  // width so surrounding text doesn't reflow on hover or on replacement.
+  if (translation.length < original.length) {
+    span.style.display = 'inline-block';
+    span.style.minWidth = `${original.length}ch`;
+    span.style.textAlign = 'center';
+  }
+
   span.addEventListener('mouseenter', () => {
     span.textContent = original;
     // Fire-and-forget: hovering to see the original counts as a recall failure.
