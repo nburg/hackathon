@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { KnowledgeDonut } from '@/components/dashboard/KnowledgeDonut';
@@ -10,8 +11,12 @@ import { useVocabulary } from '@/lib/hooks/useVocabulary';
 import { useSettings } from '@/lib/hooks/useSettings';
 import { SUPPORTED_LANGUAGES } from '@/lib/storage/api';
 import { getTop200ForLanguage } from '@lib/constants';
+import { LanguagesTab } from './LanguagesTab';
+
+type Tab = 'progress' | 'languages';
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState<Tab>('progress');
   const { vocabulary, loading, error } = useVocabulary();
   const { settings } = useSettings();
 
@@ -50,83 +55,110 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Vocabulary Progress</h1>
           <p className="text-gray-600">
             Track your {langName} learning journey as you browse the web
           </p>
         </div>
 
-        {wordsList.length === 0 ? (
-          <Card>
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">📖</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No words tracked yet</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Start browsing websites to see {langName} words replace English ones. Each word you
-                encounter will appear here with your learning progress!
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={() => chrome.runtime.openOptionsPage()}>Configure Settings</Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => window.open('https://www.bbc.com/news', '_blank')}
-                >
-                  Try a Website
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {/* Stats strip */}
-            <StatsStrip words={wordsList} />
+        {/* Tab bar */}
+        <div className="flex gap-1 mb-6 border-b border-gray-200">
+          {(
+            [
+              { id: 'progress', label: 'Progress' },
+              { id: 'languages', label: 'Languages' },
+            ] as { id: Tab; label: string }[]
+          ).map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors -mb-px ${
+                activeTab === id
+                  ? 'bg-white border border-b-white border-gray-200 text-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-            {/* Knowledge distribution + Phase 2 unlock */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <KnowledgeDonut words={wordsList} />
-              </Card>
-              <Card>
-                <Phase2Bar top200Known={top200Known} />
-              </Card>
-            </div>
+        {activeTab === 'languages' && <LanguagesTab />}
 
-            {/* At-risk words (only rendered if there are any) */}
-            <AtRiskWords words={wordsList} />
-
-            {/* Full word list */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Recent Words ({wordsList.length})
-                </h2>
-                <div className="flex items-center gap-4">
-                  <p className="text-sm text-gray-500">Sorted by most recently seen</p>
+        {activeTab === 'progress' &&
+          (wordsList.length === 0 ? (
+            <Card>
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">📖</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No words tracked yet</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Start browsing websites to see {langName} words replace English ones. Each word
+                  you encounter will appear here with your learning progress!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button onClick={() => chrome.runtime.openOptionsPage()}>
+                    Configure Settings
+                  </Button>
                   <Button
                     variant="secondary"
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          `Reset all ${langName} word progress? This cannot be undone.`
-                        )
-                      ) {
-                        chrome.storage.local.remove(`word_stats_${settings?.language ?? 'es'}`);
-                      }
-                    }}
+                    onClick={() => window.open('https://www.bbc.com/news', '_blank')}
                   >
-                    Reset Progress
+                    Try a Website
                   </Button>
                 </div>
               </div>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {/* Stats strip */}
+              <StatsStrip words={wordsList} />
+
+              {/* Knowledge distribution + Phase 2 unlock */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {wordsList.map((word) => (
-                  <WordCard key={word.word} word={word} />
-                ))}
+                <Card>
+                  <KnowledgeDonut words={wordsList} />
+                </Card>
+                <Card>
+                  <Phase2Bar top200Known={top200Known} />
+                </Card>
+              </div>
+
+              {/* At-risk words (only rendered if there are any) */}
+              <AtRiskWords words={wordsList} />
+
+              {/* Full word list */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Recent Words ({wordsList.length})
+                  </h2>
+                  <div className="flex items-center gap-4">
+                    <p className="text-sm text-gray-500">Sorted by most recently seen</p>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Reset all ${langName} word progress? This cannot be undone.`
+                          )
+                        ) {
+                          chrome.storage.local.remove(`word_stats_${settings?.language ?? 'es'}`);
+                        }
+                      }}
+                    >
+                      Reset Progress
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {wordsList.map((word) => (
+                    <WordCard key={word.word} word={word} />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          ))}
       </div>
     </div>
   );

@@ -92,6 +92,31 @@ for (const l of SUPPORTED_LANGUAGES) {
   langState[l.code] = { availability: 'checking', translator: null, testDebounce: null };
 }
 
+// Active language — mirrors cvw_settings.language in chrome.storage.sync
+let activeLang = 'es';
+
+async function loadActiveLang() {
+  try {
+    const result = await chrome.storage.sync.get('cvw_settings');
+    activeLang = result['cvw_settings']?.language ?? 'es';
+  } catch (_) {}
+}
+
+async function setActiveLang(code) {
+  activeLang = code;
+  // Mirror saveSettings() from src/lib/storage/api.ts
+  const result = await chrome.storage.sync.get('cvw_settings');
+  const current = result['cvw_settings'] ?? {};
+  await chrome.storage.sync.set({ cvw_settings: { ...current, language: code } });
+  const p5Result = await chrome.storage.local.get('settings');
+  const p5Current = p5Result['settings'] ?? {};
+  await chrome.storage.local.set({ settings: { ...p5Current, targetLanguage: code } });
+  // Refresh all available rows so Active/Use buttons update
+  for (const l of SUPPORTED_LANGUAGES) {
+    if (langState[l.code].availability === 'available') updateLangRow(l.code);
+  }
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function setStep(id, state, message) {
@@ -186,8 +211,25 @@ function updateLangRow(code) {
   if (progress) progress.style.display = isDownloading ? '' : 'none';
   if (row) row.classList.toggle('is-downloading', isDownloading);
 
+  const useBtn     = document.getElementById('use-btn-' + code);
+  const activeChip = document.getElementById('active-chip-' + code);
+
   if (av === 'available') {
     btn.style.display = 'none';
+    if (code === activeLang) {
+      if (useBtn)     useBtn.style.display = 'none';
+      if (activeChip) activeChip.style.display = '';
+    } else {
+      if (useBtn)     useBtn.style.display = '';
+      if (activeChip) activeChip.style.display = 'none';
+    }
+  } else {
+    if (useBtn)     useBtn.style.display = 'none';
+    if (activeChip) activeChip.style.display = 'none';
+  }
+
+  if (av === 'available') {
+    // already handled above
   } else if (av === 'downloadable') {
     btn.style.display = '';
     btn.disabled = false;
@@ -218,6 +260,8 @@ function sortLangRows() {
   rows.sort((a, b) => {
     const codeA = a.id.slice('lang-row-'.length);
     const codeB = b.id.slice('lang-row-'.length);
+    if (codeA === activeLang) return -1;
+    if (codeB === activeLang) return 1;
     const pA = SORT_PRIORITY[langState[codeA]?.availability] ?? 3;
     const pB = SORT_PRIORITY[langState[codeB]?.availability] ?? 3;
     if (pA !== pB) return pA - pB;
@@ -262,6 +306,8 @@ function buildLangRows() {
           <span class="lang-name">${label}</span>
           <span class="lang-status-chip chip-checking" id="chip-${code}">Checking…</span>
         </div>
+        <button class="lang-use-btn" id="use-btn-${code}" style="display:none">Use</button>
+        <span class="lang-active-chip" id="active-chip-${code}" style="display:none">✓ Active</span>
         <button class="lang-dl-btn" id="dl-btn-${code}" style="display:none">Download</button>
       </div>
       <div id="progress-${code}" style="display:none; margin-top:0.6rem;">
@@ -277,6 +323,9 @@ function buildLangRows() {
 
     document.getElementById('dl-btn-' + code).addEventListener('click', () => {
       handleDownloadClick(code);
+    });
+    document.getElementById('use-btn-' + code).addEventListener('click', () => {
+      setActiveLang(code);
     });
   }
 }
@@ -492,6 +541,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('lang-search').addEventListener('input', filterLangRows);
 
-  runChecks();
-  setInterval(runChecks, 3000);
+  loadActiveLang().then(() => {
+    runChecks();
+    setInterval(runChecks, 3000);
+  });
 });

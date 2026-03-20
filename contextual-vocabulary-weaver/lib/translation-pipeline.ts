@@ -304,7 +304,7 @@ function replaceInDom(candidate: WordCandidate, translation: string): void {
   const wordNode = node.splitText(offset);
   const restNode = wordNode.splitText(length);
 
-  const span = createWordSpan(word, translation);
+  const span = createWordSpan(word, translation, parent as Element);
 
   // Swap the word text node for the span; restNode stays in place automatically.
   parent.replaceChild(span, wordNode);
@@ -379,7 +379,28 @@ function createSentenceSpan(original: string, translation: string): HTMLSpanElem
   return span;
 }
 
-function createWordSpan(original: string, translation: string): HTMLSpanElement {
+// Reused across calls to avoid creating a new canvas every replacement.
+let _measureCanvas: HTMLCanvasElement | null = null;
+
+/**
+ * Measures the rendered pixel width of `text` using the computed font of
+ * `contextEl` (falls back to 16px sans-serif if unavailable).
+ */
+function measureTextPx(text: string, contextEl?: Element): number {
+  if (!_measureCanvas) _measureCanvas = document.createElement('canvas');
+  const ctx = _measureCanvas.getContext('2d');
+  if (!ctx) return text.length * 8; // safe fallback
+  ctx.font = contextEl
+    ? window.getComputedStyle(contextEl).font || '16px sans-serif'
+    : '16px sans-serif';
+  return ctx.measureText(text).width;
+}
+
+function createWordSpan(
+  original: string,
+  translation: string,
+  contextEl?: Element
+): HTMLSpanElement {
   const span = document.createElement('span');
   span.className = 'cvw-word';
   span.dataset.original = original;
@@ -387,11 +408,13 @@ function createWordSpan(original: string, translation: string): HTMLSpanElement 
   span.textContent = translation;
   span.title = original; // fallback tooltip
 
-  // When the translation is shorter than the original, reserve the original's
-  // width so surrounding text doesn't reflow on hover or on replacement.
-  if (translation.length < original.length) {
+  // Reserve the wider of the two strings' pixel widths so surrounding text
+  // never reflows when toggling between translation and original on hover.
+  const origPx = measureTextPx(original, contextEl);
+  const transPx = measureTextPx(translation, contextEl);
+  if (Math.round(origPx) !== Math.round(transPx)) {
     span.style.display = 'inline-block';
-    span.style.minWidth = `${original.length}ch`;
+    span.style.minWidth = `${Math.max(origPx, transPx)}px`;
     span.style.textAlign = 'center';
   }
 
