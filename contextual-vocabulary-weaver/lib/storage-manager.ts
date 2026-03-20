@@ -87,7 +87,7 @@ export async function getWordStats(word: string): Promise<WordStats | null> {
   const key = await getActiveWordStatsKey();
   const data = await chrome.storage.local.get(key);
   const allStats = (data[key] as Record<string, WordStats>) || {};
-  return allStats[word] || null;
+  return allStats[word.toLowerCase()] || null;
 }
 
 /**
@@ -126,9 +126,10 @@ export async function trackExposure(word: string, translation?: string): Promise
   // Read current state (SELECT)
   const key = await getActiveWordStatsKey();
   const allStats = await getAllWordStats();
+  const normalizedWord = word.toLowerCase();
 
   // Get existing record or create new one (COALESCE/NVL equivalent)
-  const existingStats = allStats[word];
+  const existingStats = allStats[normalizedWord];
 
   if (existingStats) {
     // UPDATE case: Word already exists — exposure is a "correct" BKT observation
@@ -140,11 +141,11 @@ export async function trackExposure(word: string, translation?: string): Promise
     if (translation && !existingStats.translation) {
       existingStats.translation = translation;
     }
-    allStats[word] = existingStats;
+    allStats[normalizedWord] = existingStats;
   } else {
     // INSERT case: New word
     const newStats: WordStats = {
-      word,
+      word: normalizedWord,
       translation,
       exposureCount: 1,
       recallFailures: 0,
@@ -152,7 +153,7 @@ export async function trackExposure(word: string, translation?: string): Promise
       lastSeen: Date.now(),
       pKnown: BKT_P_INIT, // New word, completely unknown
     };
-    allStats[word] = newStats;
+    allStats[normalizedWord] = newStats;
   }
 
   // Write back to storage (COMMIT)
@@ -173,17 +174,18 @@ export async function trackExposure(word: string, translation?: string): Promise
 export async function trackRecallFailure(word: string): Promise<void> {
   const key = await getActiveWordStatsKey();
   const allStats = await getAllWordStats();
+  const normalizedWord = word.toLowerCase();
 
   // Defensive check: Only update if word exists (WHERE clause validation)
-  if (!allStats[word]) {
+  if (!allStats[normalizedWord]) {
     console.warn(`Cannot track recall failure: word "${word}" not found`);
     return;
   }
 
   // Update counters (SET clause)
   // Hover is an "incorrect" BKT observation: user revealed they don't know the word
-  allStats[word].recallFailures += 1;
-  allStats[word].pKnown = bktUpdate(allStats[word].pKnown, false);
+  allStats[normalizedWord].recallFailures += 1;
+  allStats[normalizedWord].pKnown = bktUpdate(allStats[normalizedWord].pKnown, false);
 
   // Write back (COMMIT)
   await chrome.storage.local.set({ [key]: allStats });
@@ -272,7 +274,7 @@ function frequencyPriority(word: string): number {
 }
 
 export async function getWordPriority(word: string): Promise<number> {
-  const stats = await getWordStats(word);
+  const stats = await getWordStats(word.toLowerCase());
 
   // Case 1: New word (never tracked) - priority varies by how common it is
   if (!stats) return frequencyPriority(word);
