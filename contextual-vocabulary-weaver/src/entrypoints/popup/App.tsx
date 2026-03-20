@@ -30,12 +30,14 @@ export default function App() {
     setDisabling(true);
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.url) return;
+      if (!tab?.url || !tab.id) return;
       const hostname = new URL(tab.url).hostname;
       const current = settings!.disabledSites || [];
       if (!current.includes(hostname)) {
         await updateSettings({ disabledSites: [...current, hostname] });
       }
+      // Reload the tab so the content script re-runs and respects the new setting.
+      await chrome.tabs.reload(tab.id);
     } catch {
       // ignore tab query errors (e.g. on chrome:// pages)
     } finally {
