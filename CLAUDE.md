@@ -10,22 +10,45 @@ The extension is built with WXT (Web Extension Toolkit) targeting Manifest V3 / 
 
 | Module | Role | Status |
 |--------|------|--------|
-| P1 | Infrastructure — WXT scaffold, build pipeline, manifest | In progress |
-| P2 | Frontend/UI — options page, vocabulary dashboard, hover mechanics | In progress |
+| P1 | Infrastructure — WXT scaffold, build pipeline, manifest | Complete |
+| P2 | Frontend/UI — options page, vocabulary dashboard, hover mechanics | Complete |
 | P3 | DOM & NLP — text extraction, POS tagging, candidate API | Complete (47/47 tests) |
-| P4 | Translation Pipeline — Chrome AI Translation API, DOM replacement | In progress |
-| P5 | Algorithm & Data — spaced repetition (BKT), chrome.storage | Planned |
+| P4 | Translation Pipeline — Chrome AI Translation API, DOM replacement | Complete |
+| P5 | Algorithm & Data — spaced repetition (BKT), chrome.storage | Complete |
 
 ## Repository Structure
 
 ```
-P3/               # DOM & NLP module (standalone npm package)
-  src/            # TypeScript source
-  tests/          # Vitest unit tests
-  dist/           # Compiled output (Node + browser bundle)
-```
+P3/                                  # DOM & NLP module (standalone npm package)
+  src/                               # TypeScript source
+  tests/                             # Vitest unit tests
+  dist/                              # Compiled output (Node + browser bundle)
 
-P1–P2 and P4–P5 modules are expected to live at the same level as P3 once implemented.
+contextual-vocabulary-weaver/        # WXT browser extension (P1–P5 integrated)
+  lib/                               # Shared logic (not bundled by WXT directly)
+    index.ts                         # SRS/storage public API (re-exports everything)
+    storage-manager.ts               # BKT engine, word tracking, chrome.storage
+    translation-pipeline.ts          # P4: candidate selection, DOM replacement, Phase 1 & 2
+    types.ts                         # Shared TypeScript types and storage schema
+    constants.ts                     # TOP_200_COMMON_WORDS, thresholds
+  src/
+    entrypoints/
+      background.ts                  # Service worker: owns Translator instance, proxies translate messages
+      content/index.ts               # Injected into pages: runs TranslationPipeline on load
+      popup/                         # Toolbar popup (React): status, word count, nav links
+      options/                       # Settings page (React): density slider, enable toggle, site filter
+      dashboard/                     # Vocabulary dashboard (React): word cards, progress indicator
+    components/
+      ui/                            # Reusable UI: Button, Card, Toggle, Slider, Spinner, ErrorBoundary
+      dashboard/                     # Dashboard-specific: WordCard, ProgressIndicator
+    lib/
+      hooks/useSettings.ts           # React hook: reads/writes settings via chrome.storage
+      hooks/useVocabulary.ts         # React hook: reads word stats for dashboard
+      storage/api.ts                 # Low-level chrome.storage wrappers
+    types/index.ts                   # Extension-level TypeScript types
+  public/
+    setup.html / setup.js            # One-time onboarding page (checks Chrome AI flags)
+```
 
 ## P3: DOM & NLP Module
 
@@ -70,15 +93,28 @@ P5 read API             --> P2 (dashboard: exposure counts, P(Known))
 
 Each `WordCandidate` carries: `word`, `pos`, `node` (DOM Text), `offset`, `length`, `isProperNoun`, `isMultiWord`. P4 uses `node`/`offset`/`length` to perform in-place DOM replacement.
 
-## Extension Architecture (P1–P4)
+## Extension: Commands (run from `contextual-vocabulary-weaver/`)
 
-The WXT extension uses Manifest V3 with:
-- **Background service worker** — hosts the Chrome AI `Translator` instance (must be created there, as `window.translation` requires a service worker context in some builds)
-- **Content scripts** — injected into web pages; calls into P3 for candidate extraction and P4 for replacement
-- **Options page** — built with React or Vue; density slider, per-site toggle, language selector
-- **Dashboard** — vocabulary progress view wired to P5 storage
+```bash
+npm install
+npm run dev          # WXT dev server with HMR (Chrome)
+npm run build        # Production build
+npm run compile      # TypeScript type-check only (tsc --noEmit)
+npm run lint         # ESLint over src/
+```
 
-The Chrome AI Translation API (`window.translation` / `Translator`) requires a one-time model download triggered by a user gesture. The download flow and "not supported" fallback are owned by P4 (logic) and P2 (UI).
+## Extension Architecture
+
+The WXT extension uses Manifest V3 with React + Tailwind. All entrypoints are under `src/entrypoints/`.
+
+- **Background service worker** (`entrypoints/background.ts`) — owns the Chrome AI `Translator` instance. Content scripts cannot call `Translator.create()` directly; they send `{ type: 'translate', text }` messages and the background proxies the call.
+- **Content script** (`entrypoints/content/index.ts`) — runs `TranslationPipeline.run(density)` on each page load. Reads settings and the enabled/disabled state from storage before running.
+- **`lib/translation-pipeline.ts`** — core P4 logic: calls P3's `extractCandidates`, scores with P5's `getWordPriority`, selects top-N% by density, wraps words in `[[markers]]` for context-aware translation, splits text nodes and replaces with `.cvw-word` / `.cvw-sentence` spans. Hover events on spans fire `trackRecallFailure`.
+- **`lib/storage-manager.ts`** — BKT engine and all `chrome.storage` reads/writes. Exports the full public API via `lib/index.ts`.
+- **Options page** — density slider (1–10%), global enable toggle, per-site regex filter, language selector (locked to Spanish for POC).
+- **Dashboard** — word cards sorted by `lastSeen`, overall progress via `ProgressIndicator`.
+
+The Chrome AI `Translator` API requires Chrome 131+ with `#translation-api` and `#optimization-guide-on-device-model` flags enabled, plus a one-time ~50 MB model download. The `public/setup.html` page guides users through this and is opened automatically on first install.
 
 ## Phase Model
 
