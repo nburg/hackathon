@@ -30,7 +30,8 @@ contextual-vocabulary-weaver/        # WXT browser extension (P1–P5 integrated
     storage-manager.ts               # BKT engine, word tracking, chrome.storage
     translation-pipeline.ts          # P4: candidate selection, DOM replacement, Phase 1 & 2
     types.ts                         # Shared TypeScript types and storage schema
-    constants.ts                     # TOP_200_COMMON_WORDS, thresholds
+    constants.ts                     # TOP_200_COMMON_WORDS, getTop200ForLanguage(), thresholds
+    constants-*.ts                   # Per-language top-200 word lists (one file per language)
   src/
     entrypoints/
       background.ts                  # Service worker: owns Translator instance, proxies translate messages
@@ -43,8 +44,8 @@ contextual-vocabulary-weaver/        # WXT browser extension (P1–P5 integrated
       dashboard/                     # Dashboard-specific: WordCard, ProgressIndicator
     lib/
       hooks/useSettings.ts           # React hook: reads/writes settings via chrome.storage
-      hooks/useVocabulary.ts         # React hook: reads word stats for dashboard
-      storage/api.ts                 # Low-level chrome.storage wrappers
+      hooks/useVocabulary.ts         # React hook: reads word stats for current language; reloads on language change
+      storage/api.ts                 # chrome.storage helpers; settings in sync storage (cvw_settings), word stats in local (word_stats_<lang>)
     types/index.ts                   # Extension-level TypeScript types
   public/
     setup.html / setup.js            # One-time onboarding page (checks Chrome AI flags)
@@ -93,6 +94,8 @@ P5 read API             --> P2 (dashboard: exposure counts, P(Known))
 
 Each `WordCandidate` carries: `word`, `pos`, `node` (DOM Text), `offset`, `length`, `isProperNoun`, `isMultiWord`. P4 uses `node`/`offset`/`length` to perform in-place DOM replacement.
 
+`WordStats` (in `lib/types.ts`) now includes a `translation` field populated on first replacement and surfaced in the dashboard.
+
 ## Extension: Commands (run from `contextual-vocabulary-weaver/`)
 
 ```bash
@@ -134,12 +137,14 @@ The WXT extension uses Manifest V3 with React + Tailwind. All entrypoints are un
 - **Content script** (`entrypoints/content/index.ts`) — runs `TranslationPipeline.run(density)` on each page load. Reads settings and the enabled/disabled state from storage before running.
 - **`lib/translation-pipeline.ts`** — core P4 logic: calls P3's `extractCandidates`, scores with P5's `getWordPriority`, selects top-N% by density, wraps words in `[[markers]]` for context-aware translation, splits text nodes and replaces with `.cvw-word` / `.cvw-sentence` spans. Hover events on spans fire `trackRecallFailure`.
 - **`lib/storage-manager.ts`** — BKT engine and all `chrome.storage` reads/writes. Exports the full public API via `lib/index.ts`.
-- **Options page** — density slider (1–10%), global enable toggle, per-site regex filter, language selector (locked to Spanish for POC).
-- **Dashboard** — word cards sorted by `lastSeen`, overall progress via `ProgressIndicator`.
+- **Options page** — density slider (1–10%), global enable toggle, per-site regex filter, language selector (83 languages via `SUPPORTED_LANGUAGES` in `src/lib/storage/api.ts`; defaults to Spanish).
+- **Dashboard** — word cards sorted by `lastSeen`, overall progress via `ProgressIndicator`. Displays language name dynamically; includes a per-language "Reset Progress" button.
 
 The Chrome AI `Translator` API requires Chrome 131+ with `#translation-api` and `#optimization-guide-on-device-model` flags enabled, plus a one-time ~50 MB model download. The `public/setup.html` page guides users through this and is opened automatically on first install.
+
+**Storage split**: P2's UI layer stores settings under key `cvw_settings` in `chrome.storage.sync`. P5's engine stores settings under `settings` and word stats under `word_stats_<langCode>` in `chrome.storage.local`. `saveSettings()` in `src/lib/storage/api.ts` bridges language changes between the two schemas.
 
 ## Phase Model
 
 - **Phase 1** — Isolated word replacement (current target). P4 passes single tokens to the translation API.
-- **Phase 2** — Sentence-level replacement, unlocked when P5's BKT reports `P(Known) >= 0.85` for enough of the top-200 Spanish words. P3's `getSentenceForCandidate()` is the hook for extracting sentence context.
+- **Phase 2** — Sentence-level replacement, unlocked when the user knows ≥ 70% of the top-200 words in their target language (`checkAndTriggerPhase2` in `lib/storage-manager.ts`). P3's `getSentenceForCandidate()` is the hook for extracting sentence context. The transition is currently silent — see `contextual-vocabulary-weaver/UX_SUGGESTIONS.md` for known UX issues.
