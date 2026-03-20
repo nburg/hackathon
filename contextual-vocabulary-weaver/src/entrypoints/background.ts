@@ -2,10 +2,15 @@
 // Translator global — only accessible at extension-level (not in content
 // scripts on regular pages). Declared here so the service worker can own it.
 // ---------------------------------------------------------------------------
-declare const Translator: undefined | {
-  availability(opts: { sourceLanguage: string; targetLanguage: string }): Promise<string>;
-  create(opts: { sourceLanguage: string; targetLanguage: string }): Promise<{ translate(text: string): Promise<string> }>;
-};
+declare const Translator:
+  | undefined
+  | {
+      availability(opts: { sourceLanguage: string; targetLanguage: string }): Promise<string>;
+      create(opts: {
+        sourceLanguage: string;
+        targetLanguage: string;
+      }): Promise<{ translate(text: string): Promise<string> }>;
+    };
 
 let _translator: { translate(text: string): Promise<string> } | null = null;
 let _translatorLang: string | null = null;

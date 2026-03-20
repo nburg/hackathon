@@ -24,6 +24,12 @@ Nothing — can start immediately.
 
 ### Tasks
 - [ ] **WCAG 2 accessibility audit** — Review all React entrypoints (popup, options, dashboard) against [WCAG 2 guidelines](https://www.w3.org/WAI/standards-guidelines/wcag/): keyboard navigation, focus management, color contrast, ARIA labels on interactive elements, screen reader support for replaced words (`.cvw-word`, `.cvw-sentence`)
+- [ ] **Enable/disable toggle in popup** — Add an interactive toggle directly in `popup/App.tsx` so users can pause/resume without navigating to Settings (currently the indicator is display-only)
+- [ ] **Dynamic popup description** — `popup/App.tsx` line 57 hardcodes "Learn Spanish passively!"; derive the label from `settings.language` so it works for future languages
+- [ ] **Density slider clarity** — Show the computed percentage inline in `options/App.tsx` (e.g. "5% of words replaced") to remove ambiguity between the 1–10 integer scale and the percentage
+- [ ] **"Disable on this site" quick control** — Add a button in `popup/App.tsx` that appends the current tab's hostname to `siteRegexPatterns` via `src/lib/storage/api.ts`, avoiding the regex barrier in Settings
+- [ ] **Phase 2 transition notification** — Surface a popup badge change or browser notification when `checkAndTriggerPhase2` fires in `lib/storage-manager.ts`; wire the trigger through `src/entrypoints/background.ts`
+- [ ] **Hide Setup Guide for established users** — In `popup/App.tsx`, conditionally render the Setup Guide button only when `vocabulary.totalTracked === 0`
 
 ### Depends on
 Role 1 (duplicate `background.ts` cleanup) should be done first to avoid confusion, but UI work can proceed in parallel.
@@ -37,8 +43,6 @@ Role 1 (duplicate `background.ts` cleanup) should be done first to avoid confusi
 ### Tasks
 - [ ] **Multi-language architecture** — Replace hardcoded Spanish logic with a language-agnostic pipeline; store the target language in settings (already has `settings.language`) and pass it through the translation pipeline
 - [ ] **Common-words key-value store** — Move the "top-N most common words" logic out of inline code into a local data file (`lib/common-words/<lang>.json`); research and populate word lists for at least 2–3 languages; prompt the user to select a language on first run if not set
-- [ ] **Third-party translation fallback** — Add support for open-source browsers (Firefox) where `window.ai.translator` / Chrome's built-in Translation API is unavailable; integrate a fallback open-source translation library or API; update the setup page to reflect browser-specific instructions
-
 ### Depends on
 Role 1 code review (to avoid building on top of code flagged for refactor).
 
