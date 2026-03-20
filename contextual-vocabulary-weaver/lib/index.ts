@@ -38,7 +38,7 @@ export {
   trackExposure,
   trackRecallFailure,
   // Calculation logic
-  calculatePKnown,
+  bktUpdate,
   getWordPriority,
   // Analytics
   getLearningSummary,

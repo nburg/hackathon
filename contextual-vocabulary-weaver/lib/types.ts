@@ -31,9 +31,11 @@ export interface WordStats {
   lastSeen: number;
 
   /**
-   * Probability that user knows this word (0.0 - 1.0)
-   * Database Analogy: This is a COMPUTED/CALCULATED column, like a materialized view
-   * Formula: Based on successRate = (exposureCount - recallFailures) / exposureCount
+   * Bayesian Knowledge Tracing estimate: P(user knows this word), range [0, 1].
+   * Updated incrementally on each exposure (correct observation) and each hover
+   * (incorrect observation) using the BKT update rule from storage-manager.ts.
+   * P(G) accounts for the fact that passive readers often skip unknown words
+   * without hovering, so a non-hover is a weak — not perfect — positive signal.
    */
   pKnown: number;
 }

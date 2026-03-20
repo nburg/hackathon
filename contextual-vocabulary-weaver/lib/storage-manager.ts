@@ -15,8 +15,10 @@ import { STORAGE_KEYS, DEFAULT_SETTINGS } from './types';
 import {
   PHASE2_THRESHOLD,
   KNOWN_THRESHOLD,
-  MIN_PKNOWN,
-  MAX_PKNOWN,
+  BKT_P_INIT,
+  BKT_P_TRANSIT,
+  BKT_P_SLIP,
+  BKT_P_GUESS,
   COMMON_ENGLISH_WORDS,
   ENGLISH_WORD_RANK,
   getTop200ForLanguage,
@@ -129,13 +131,11 @@ export async function trackExposure(word: string, translation?: string): Promise
   const existingStats = allStats[word];
 
   if (existingStats) {
-    // UPDATE case: Word already exists
+    // UPDATE case: Word already exists — exposure is a "correct" BKT observation
+    // (user saw the word and did not hover; P(G) accounts for passive skipping)
     existingStats.exposureCount += 1;
     existingStats.lastSeen = Date.now();
-    existingStats.pKnown = calculatePKnown(
-      existingStats.exposureCount,
-      existingStats.recallFailures
-    );
+    existingStats.pKnown = bktUpdate(existingStats.pKnown, true);
     // Store translation if we now have one and didn't before
     if (translation && !existingStats.translation) {
       existingStats.translation = translation;
@@ -150,7 +150,7 @@ export async function trackExposure(word: string, translation?: string): Promise
       recallFailures: 0,
       firstSeen: Date.now(),
       lastSeen: Date.now(),
-      pKnown: 0.0, // New word, completely unknown
+      pKnown: BKT_P_INIT, // New word, completely unknown
     };
     allStats[word] = newStats;
   }
@@ -181,11 +181,9 @@ export async function trackRecallFailure(word: string): Promise<void> {
   }
 
   // Update counters (SET clause)
+  // Hover is an "incorrect" BKT observation: user revealed they don't know the word
   allStats[word].recallFailures += 1;
-  allStats[word].pKnown = calculatePKnown(
-    allStats[word].exposureCount,
-    allStats[word].recallFailures
-  );
+  allStats[word].pKnown = bktUpdate(allStats[word].pKnown, false);
 
   // Write back (COMMIT)
   await chrome.storage.local.set({ [key]: allStats });
@@ -196,35 +194,44 @@ export async function trackRecallFailure(word: string): Promise<void> {
 // ============================================================================
 
 /**
- * Calculate probability that user knows a word (simplified SRS algorithm)
+ * Bayesian Knowledge Tracing update step (Corbett & Anderson, 1994).
  *
- * Database Analogy: This is like a deterministic function or computed column
- * CREATE FUNCTION calculate_pknown(exposure INT, failures INT)
- * RETURNS FLOAT DETERMINISTIC
+ * Updates the latent knowledge probability P(L_n) given one observation:
  *
- * Algorithm:
- * - If user never saw the word: pKnown = 0.0 (NULL handling)
- * - If user saw it N times and failed M times: successRate = (N - M) / N
- * - Apply floor (0.1) and ceiling (0.95) bounds
+ *   Correct (no hover — user did not need to reveal the original word):
+ *     P(L | correct) = P(L) * (1 - P(S))
+ *                      ─────────────────────────────────────────────
+ *                      P(L) * (1 - P(S))  +  (1 - P(L)) * P(G)
  *
- * Example:
- * - Saw 10 times, failed 2 times: successRate = 8/10 = 0.80 → pKnown = 0.80
- * - Saw 5 times, failed 5 times: successRate = 0/5 = 0.00 → pKnown = 0.10 (floor)
- * - Saw 20 times, failed 0 times: successRate = 20/20 = 1.00 → pKnown = 0.95 (ceiling)
+ *   Incorrect (hover — user revealed they don't know the word):
+ *     P(L | incorrect) = P(L) * P(S)
+ *                        ─────────────────────────────────────────
+ *                        P(L) * P(S)  +  (1 - P(L)) * (1 - P(G))
  *
- * @param exposureCount - Total number of times word was shown
- * @param recallFailures - Number of times user hovered (forgot the word)
- * @returns Probability between 0.1 and 0.95
+ *   Then apply learning transition:
+ *     P(L_n) = P(L | obs) + (1 - P(L | obs)) * P(T)
+ *
+ * P(G) is the key parameter for passive reading: a non-hover is a weak
+ * positive signal because users often skip unknown words without hovering.
+ *
+ * @param pKnown  - Current P(L): probability user knows the word
+ * @param correct - true = no hover (correct), false = hovered (incorrect)
+ * @returns Updated P(L) in [0, 1]
  */
-export function calculatePKnown(exposureCount: number, recallFailures: number): number {
-  // Handle edge case: never exposed (like NULL handling)
-  if (exposureCount === 0) return 0.0;
+export function bktUpdate(pKnown: number, correct: boolean): number {
+  let pKnownGivenObs: number;
 
-  // Calculate success rate (like a calculated field)
-  const successRate = (exposureCount - recallFailures) / exposureCount;
+  if (correct) {
+    const pCorrect = pKnown * (1 - BKT_P_SLIP) + (1 - pKnown) * BKT_P_GUESS;
+    pKnownGivenObs = (pKnown * (1 - BKT_P_SLIP)) / pCorrect;
+  } else {
+    const pIncorrect = pKnown * BKT_P_SLIP + (1 - pKnown) * (1 - BKT_P_GUESS);
+    pKnownGivenObs = (pKnown * BKT_P_SLIP) / pIncorrect;
+  }
 
-  // Apply bounds (like LEAST/GREATEST in SQL or BETWEEN clause)
-  return Math.max(MIN_PKNOWN, Math.min(MAX_PKNOWN, successRate));
+  // Apply learning transition: even after an incorrect observation, the user
+  // may have learned something from seeing the word and its translation.
+  return pKnownGivenObs + (1 - pKnownGivenObs) * BKT_P_TRANSIT;
 }
 
 /**

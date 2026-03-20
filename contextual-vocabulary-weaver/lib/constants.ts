@@ -284,14 +284,21 @@ export const PHASE2_THRESHOLD = 0.7; // User must know 70% of top 200 words
 export const KNOWN_THRESHOLD = 0.85;
 
 /**
- * Minimum probability for pKnown (floor value)
+ * Bayesian Knowledge Tracing parameters
+ *
+ * P(L0)  — prior probability the user already knows a new word (start unknown)
+ * P(T)   — probability of learning on each exposure (learning rate)
+ * P(S)   — slip: user knows the word but hovers anyway (e.g. skimming fast)
+ * P(G)   — guess: user doesn't know the word but doesn't hover (ignores it)
+ *
+ * P(G) is the most important parameter here: passive readers routinely skip
+ * over unknown words, so a non-hover is a weak positive signal, not a
+ * guaranteed correct recall.
  */
-export const MIN_PKNOWN = 0.1;
-
-/**
- * Maximum probability for pKnown (ceiling value)
- */
-export const MAX_PKNOWN = 0.95;
+export const BKT_P_INIT = 0.0;
+export const BKT_P_TRANSIT = 0.15;
+export const BKT_P_SLIP = 0.1;
+export const BKT_P_GUESS = 0.75;
 
 /**
  * Most common English words ordered by frequency (most frequent first).
