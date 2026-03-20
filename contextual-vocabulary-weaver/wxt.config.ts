@@ -25,7 +25,7 @@ export default defineConfig({
       },
     },
   }),
-  runner: {
+  webExt: {
     // Persist the Chrome profile across runs so flags, downloaded language
     // models, and extension settings survive restarts.
     chromiumProfile: chromeProfile,
