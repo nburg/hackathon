@@ -153,11 +153,9 @@ export default function App() {
         <Button fullWidth variant="secondary" onClick={openOptions} aria-label="Open settings">
           Settings
         </Button>
-        {totalTracked === 0 && (
-          <Button fullWidth variant="secondary" onClick={openSetup} aria-label="Open setup guide">
-            Setup Guide
-          </Button>
-        )}
+        <Button fullWidth variant="secondary" onClick={openSetup} aria-label="Open setup guide">
+          Setup Guide
+        </Button>
       </div>
     </div>
   );
