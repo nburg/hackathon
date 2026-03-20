@@ -114,8 +114,10 @@ export async function saveSettings(settings: Partial<Settings>): Promise<void> {
 }
 
 export async function getVocabulary(): Promise<VocabularyData> {
-  const result = await chrome.storage.local.get(StorageKeys.VOCABULARY);
-  const wordStats = (result[StorageKeys.VOCABULARY] as Record<string, WordStats>) || {};
+  const settings = await getSettings();
+  const key = `word_stats_${settings.language}`;
+  const result = await chrome.storage.local.get(key);
+  const wordStats = (result[key] as Record<string, WordStats>) || {};
   return transformWordStats(wordStats);
 }
 

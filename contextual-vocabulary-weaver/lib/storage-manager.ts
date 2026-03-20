@@ -67,6 +67,12 @@ export async function updateSettings(newSettings: Partial<ExtensionSettings>): P
 // WORD STATS MANAGEMENT (word_stats Table CRUD)
 // ============================================================================
 
+/** Returns the chrome.storage.local key scoped to the active target language. */
+async function getActiveWordStatsKey(): Promise<string> {
+  const settings = await getSettings();
+  return `word_stats_${settings.targetLanguage}`;
+}
+
 /**
  * Get statistics for a single word
  *
@@ -77,8 +83,9 @@ export async function updateSettings(newSettings: Partial<ExtensionSettings>): P
  * @returns Word statistics or null if word hasn't been tracked yet
  */
 export async function getWordStats(word: string): Promise<WordStats | null> {
-  const data = await chrome.storage.local.get(STORAGE_KEYS.WORD_STATS);
-  const allStats = (data.word_stats as Record<string, WordStats>) || {};
+  const key = await getActiveWordStatsKey();
+  const data = await chrome.storage.local.get(key);
+  const allStats = (data[key] as Record<string, WordStats>) || {};
   return allStats[word] || null;
 }
 
@@ -91,8 +98,9 @@ export async function getWordStats(word: string): Promise<WordStats | null> {
  * @returns Map of all tracked words (word -> WordStats)
  */
 export async function getAllWordStats(): Promise<Record<string, WordStats>> {
-  const data = await chrome.storage.local.get(STORAGE_KEYS.WORD_STATS);
-  return (data.word_stats as Record<string, WordStats>) || {};
+  const key = await getActiveWordStatsKey();
+  const data = await chrome.storage.local.get(key);
+  return (data[key] as Record<string, WordStats>) || {};
 }
 
 /**
@@ -115,6 +123,7 @@ export async function getAllWordStats(): Promise<Record<string, WordStats>> {
  */
 export async function trackExposure(word: string, translation?: string): Promise<void> {
   // Read current state (SELECT)
+  const key = await getActiveWordStatsKey();
   const allStats = await getAllWordStats();
 
   // Get existing record or create new one (COALESCE/NVL equivalent)
@@ -148,9 +157,7 @@ export async function trackExposure(word: string, translation?: string): Promise
   }
 
   // Write back to storage (COMMIT)
-  await chrome.storage.local.set({
-    [STORAGE_KEYS.WORD_STATS]: allStats,
-  });
+  await chrome.storage.local.set({ [key]: allStats });
 }
 
 /**
@@ -165,6 +172,7 @@ export async function trackExposure(word: string, translation?: string): Promise
  * @param word - The word user couldn't recall (needed to hover)
  */
 export async function trackRecallFailure(word: string): Promise<void> {
+  const key = await getActiveWordStatsKey();
   const allStats = await getAllWordStats();
 
   // Defensive check: Only update if word exists (WHERE clause validation)
@@ -181,9 +189,7 @@ export async function trackRecallFailure(word: string): Promise<void> {
   );
 
   // Write back (COMMIT)
-  await chrome.storage.local.set({
-    [STORAGE_KEYS.WORD_STATS]: allStats,
-  });
+  await chrome.storage.local.set({ [key]: allStats });
 }
 
 // ============================================================================

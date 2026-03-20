@@ -74,7 +74,19 @@ export default function App() {
               <h2 className="text-xl font-semibold text-gray-800">
                 Recent Words ({wordsList.length})
               </h2>
-              <p className="text-sm text-gray-500">Sorted by most recently seen</p>
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-gray-500">Sorted by most recently seen</p>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    if (window.confirm(`Reset all ${langName} word progress? This cannot be undone.`)) {
+                      chrome.storage.local.remove(`word_stats_${settings?.language ?? 'es'}`);
+                    }
+                  }}
+                >
+                  Reset Progress
+                </Button>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {wordsList.map((word) => (

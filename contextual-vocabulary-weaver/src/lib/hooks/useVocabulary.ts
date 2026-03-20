@@ -26,13 +26,16 @@ export function useVocabulary() {
         setLoading(false);
       });
 
-    // Listen for changes (P5 will update this)
+    // Listen for changes: word_stats_<lang> updates (P5) or language setting changes (P2)
     const listener = (
       changes: { [key: string]: chrome.storage.StorageChange },
       areaName: string
     ) => {
-      if (areaName === 'local' && changes[StorageKeys.VOCABULARY]) {
-        // Transform the data properly when it updates
+      if (areaName === 'local' && Object.keys(changes).some((k) => k.startsWith('word_stats_'))) {
+        getVocabulary().then(setVocabulary).catch(console.error);
+      }
+      if (areaName === 'sync' && changes[StorageKeys.SETTINGS]) {
+        // Language may have changed — reload vocabulary for the new language
         getVocabulary().then(setVocabulary).catch(console.error);
       }
     };
