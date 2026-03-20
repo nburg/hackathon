@@ -120,10 +120,13 @@ export class TranslationPipeline {
     const count = Math.max(1, Math.round(ranked.length * densityFraction));
     const selected = ranked.slice(0, count).map(({ candidate }) => candidate);
 
-    // Group by text node and process each group concurrently.
-    // Within a group, replace right-to-left so earlier offsets stay valid.
-    const byNode = groupByNode(selected);
-    await Promise.all([...byNode.values()].map((group) => this.translateGroup(group)));
+    // Group by block ancestor (paragraph, heading, etc.) in document order,
+    // then process each block sequentially so top-of-page translations appear first.
+    const byBlock = groupByBlock(selected);
+    for (const blockGroup of byBlock.values()) {
+      const byNode = groupByNode(blockGroup);
+      await Promise.all([...byNode.values()].map((group) => this.translateGroup(group)));
+    }
   }
 
   private async runPhase2(densityFraction: number): Promise<void> {
@@ -152,15 +155,17 @@ export class TranslationPipeline {
     const count = Math.max(1, Math.round(ranked.length * densityFraction));
     const selected = ranked.slice(0, count).map(({ sc }) => sc);
 
-    // Group by text node; replace right-to-left within each node.
-    const byNode = new Map<Text, SentenceCandidate[]>();
-    for (const sc of selected) {
-      const group = byNode.get(sc.node) ?? [];
-      group.push(sc);
-      byNode.set(sc.node, group);
+    // Group by block ancestor in document order, then process sequentially.
+    const byBlock = groupSentencesByBlock(selected);
+    for (const blockGroup of byBlock.values()) {
+      const byNode = new Map<Text, SentenceCandidate[]>();
+      for (const sc of blockGroup) {
+        const group = byNode.get(sc.node) ?? [];
+        group.push(sc);
+        byNode.set(sc.node, group);
+      }
+      await Promise.all([...byNode.values()].map((group) => this.translateSentenceGroup(group)));
     }
-
-    await Promise.all([...byNode.values()].map((group) => this.translateSentenceGroup(group)));
   }
 
   private async translateSentenceGroup(sentences: SentenceCandidate[]): Promise<void> {
@@ -273,6 +278,48 @@ function buildPOSQuery(word: string, pos: string): string {
     default:
       return `[[${word}]]`;
   }
+}
+
+const BLOCK_TAGS = new Set([
+  'P', 'DIV', 'SECTION', 'ARTICLE', 'BLOCKQUOTE', 'LI',
+  'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  'TD', 'TH', 'FIGCAPTION', 'ASIDE', 'HEADER', 'FOOTER', 'MAIN',
+]);
+
+function getBlockAncestor(node: Node): Element {
+  let el: Element | null = node.parentElement;
+  while (el) {
+    if (BLOCK_TAGS.has(el.tagName)) return el;
+    el = el.parentElement;
+  }
+  return document.body;
+}
+
+/**
+ * Groups candidates by their nearest block-level ancestor.
+ * Map insertion order mirrors document order because candidates arrive
+ * from P3's TreeWalker traversal (top-to-bottom).
+ */
+function groupByBlock(candidates: WordCandidate[]): Map<Element, WordCandidate[]> {
+  const map = new Map<Element, WordCandidate[]>();
+  for (const c of candidates) {
+    const block = getBlockAncestor(c.node);
+    const existing = map.get(block) ?? [];
+    existing.push(c);
+    map.set(block, existing);
+  }
+  return map;
+}
+
+function groupSentencesByBlock(sentences: SentenceCandidate[]): Map<Element, SentenceCandidate[]> {
+  const map = new Map<Element, SentenceCandidate[]>();
+  for (const sc of sentences) {
+    const block = getBlockAncestor(sc.node);
+    const existing = map.get(block) ?? [];
+    existing.push(sc);
+    map.set(block, existing);
+  }
+  return map;
 }
 
 function groupByNode(candidates: WordCandidate[]): Map<Text, WordCandidate[]> {
