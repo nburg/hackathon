@@ -121,13 +121,55 @@
     }
     @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
 
-    #download-btn {
-      background: #2563eb; color: #fff; border: none; border-radius: 6px;
-      padding: 0.55rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    .lang-row {
+      display: flex; flex-direction: column;
+      background: #0f1117; border: 1px solid #2d3448; border-radius: 8px;
+      padding: 0.7rem 1rem; gap: 0;
+      transition: border-color 0.3s;
+    }
+    .lang-row.is-downloading { border-color: #7c3aed; }
+    .lang-row-main { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+    .lang-row-info { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0; }
+    .lang-flag { font-size: 1.2rem; }
+    .lang-name { font-weight: 600; color: #f1f5f9; font-size: 0.9rem; }
+    .lang-status-chip {
+      font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px; font-weight: 500;
+      white-space: nowrap;
+    }
+    .chip-checking  { background: #1e3a5f; color: #93c5fd; }
+    .chip-available { background: #14532d; color: #4ade80; }
+    .chip-downloading { background: #3b0764; color: #d8b4fe; }
+    .chip-unavailable { background: #431407; color: #fb923c; }
+
+    .lang-dl-btn {
+      flex-shrink: 0; background: #2563eb; color: #fff; border: none; border-radius: 6px;
+      padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;
       transition: background 0.15s;
     }
-    #download-btn:hover:not(:disabled) { background: #1d4ed8; }
-    #download-btn:disabled { background: #1e3a5f; color: #60a5fa; cursor: default; }
+    .lang-dl-btn:hover:not(:disabled) { background: #1d4ed8; }
+    .lang-dl-btn:disabled { background: #1e3a5f; color: #60a5fa; cursor: default; }
+    .lang-dl-btn.btn-open { background: #7c3aed; }
+    .lang-dl-btn.btn-open:hover { background: #6d28d9; }
+
+    .test-row {
+      display: flex; align-items: center; gap: 0.6rem;
+      background: #0f1117; border: 1px solid #2d3448; border-radius: 8px;
+      padding: 0.6rem 1rem;
+    }
+    .test-row .lang-flag { font-size: 1rem; }
+    .test-row .lang-name { font-size: 0.85rem; color: #94a3b8; min-width: 5rem; }
+    .test-input {
+      flex: 1; background: #1e2330; border: 1px solid #2d3448; border-radius: 6px;
+      color: #e2e8f0; padding: 0.35rem 0.6rem; font-size: 0.85rem; outline: none;
+    }
+    .test-input:focus { border-color: #3b82f6; }
+    .test-arrow { color: #475569; font-size: 0.9rem; }
+    .test-result {
+      flex: 1; font-size: 0.9rem; color: #4ade80; font-weight: 500;
+      min-width: 0; overflow-wrap: anywhere;
+    }
+    .test-result.pending { color: #475569; font-style: italic; }
+    .test-result.error   { color: #f87171; }
   </style>
 </head>
 <body>
@@ -138,7 +180,7 @@
 
   <div id="success-banner">
     <h2>You're all set!</h2>
-    <p>Chrome's on-device translator is ready. Navigate to any English webpage and the extension will start replacing words with Spanish.</p>
+    <p id="success-text">Chrome's on-device translator is ready. Navigate to any English webpage and the extension will start replacing words with your chosen language.</p>
   </div>
 
   <!-- Step 1: Chrome version -->
@@ -186,29 +228,59 @@
     </div>
   </div>
 
-  <!-- Step 3: Model download -->
+  <!-- Step 3: Language model downloads -->
   <div class="card step-card" id="step-model">
-    <div class="step-icon" id="icon-model">3</div>
+    <div class="step-icon" id="icon-model" data-num="3">3</div>
     <div class="step-body">
-      <div class="step-title">Download the language model</div>
+      <div class="step-title">Download language models</div>
       <div class="step-desc">
-        Chrome needs to download the English → Spanish model (~50 MB).
-        Open the internals page to trigger and monitor the download:
+        Select the languages you want to learn. Chrome will download each translation model (~50 MB each).
+        You can always add more later from the extension's Settings page.
       </div>
-      <div class="copy-row">
-        <code id="internals-url">chrome://on-device-translation-internals</code>
+
+      <!-- Search -->
+      <div style="margin-top:1rem; position:relative;">
+        <span style="position:absolute; left:0.7rem; top:50%; transform:translateY(-50%); color:#475569; font-size:0.9rem; pointer-events:none;">🔍</span>
+        <input
+          id="lang-search"
+          type="search"
+          placeholder="Search languages…"
+          autocomplete="off"
+          style="width:100%; background:#0f1117; border:1px solid #2d3448; border-radius:8px;
+                 color:#e2e8f0; padding:0.45rem 0.7rem 0.45rem 2.1rem; font-size:0.875rem;
+                 outline:none; transition:border-color 0.15s;"
+          onfocus="this.style.borderColor='#3b82f6'"
+          onblur="this.style.borderColor='#2d3448'"
+        />
+      </div>
+      <p id="lang-no-results" style="display:none; margin-top:0.6rem; font-size:0.82rem; color:#475569; font-style:italic;">
+        No languages match your search.
+      </p>
+
+      <!-- Per-language rows injected by setup.js -->
+      <div id="lang-rows" style="margin-top:0.6rem; display:flex; flex-direction:column; gap:0.8rem;"></div>
+
+      <div class="copy-row" style="margin-top:1rem">
+        <code id="internals-url">chrome://on-device-translation-internals/</code>
         <button class="copy-btn" data-target="internals-url">Copy</button>
       </div>
-      <div class="step-desc" style="margin-top:0.4rem">
-        Find <strong style="color:#f8fafc">en → es</strong> and click
-        <strong style="color:#f8fafc">Install</strong> if it isn't downloading already.
+      <div class="step-desc" style="margin-top:0.3rem">
+        Open the link above to manage model downloads directly in Chrome.
       </div>
-      <div class="status-bar checking" id="status-model" style="display:none">Checking…</div>
-      <div id="download-btn-wrap" style="display:none; margin-top:0.8rem">
-        <button id="download-btn">Download Model</button>
+    </div>
+  </div>
+
+  <!-- Step 4: Live translation test -->
+  <div class="card step-card" id="step-test">
+    <div class="step-icon" id="icon-test" data-num="4">4</div>
+    <div class="step-body">
+      <div class="step-title">Live translation test</div>
+      <div class="step-desc" style="margin-bottom:0.6rem">
+        Test each downloaded language model below.
       </div>
-      <div class="progress-wrap" id="progress-wrap" style="display:none">
-        <div class="progress-bar indeterminate" id="progress-bar"></div>
+      <div id="test-rows" style="display:flex; flex-direction:column; gap:0.6rem;"></div>
+      <div id="test-placeholder" class="status-bar" style="background:#1e2330; color:#475569; margin-top:0.2rem">
+        No language models downloaded yet — complete Step 3 first.
       </div>
     </div>
   </div>

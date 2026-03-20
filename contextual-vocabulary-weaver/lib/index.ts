@@ -20,6 +20,9 @@ export type { WordStats, ExtensionSettings, StorageSchema } from './types';
 export { STORAGE_KEYS, DEFAULT_SETTINGS } from './types';
 export {
   TOP_200_COMMON_WORDS,
+  TOP_200_COMMON_WORDS_ES,
+  TOP_200_COMMON_WORDS_TA,
+  getTop200ForLanguage,
   PHASE2_THRESHOLD,
   KNOWN_THRESHOLD,
 } from './constants';

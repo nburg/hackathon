@@ -48,12 +48,15 @@ export default function App() {
   const totalTracked = vocabulary.totalTracked;
   const progressPercent = totalTracked > 0 ? Math.round((wordsKnown / totalTracked) * 100) : 0;
 
+  const LANGUAGE_NAMES: Record<string, string> = { es: 'Spanish', ta: 'Tamil' };
+  const langName = LANGUAGE_NAMES[settings.language] ?? 'your target language';
+
   return (
     <div className="w-80 p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-blue-600">🌟 Vocabulary Weaver</h2>
-          <p className="text-xs text-gray-500">Learn Spanish passively!</p>
+          <p className="text-xs text-gray-500">Learn {langName} passively!</p>
         </div>
         <div className={`flex items-center gap-2`}>
           <span className="text-xs text-gray-500">{settings.isEnabled ? 'Active' : 'Paused'}</span>
@@ -78,7 +81,7 @@ export default function App() {
       {totalTracked === 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
           <p className="text-xs text-yellow-800">
-            💡 Start browsing to see words replaced with Spanish!
+            💡 Start browsing to see words replaced with {langName}!
           </p>
         </div>
       )}

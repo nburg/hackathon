@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import type { Settings } from '@/types';
+import { useState, useEffect } from 'react';
+import type { Settings, SupportedLanguage } from '@/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
 import { Toggle } from '@/components/ui/Toggle';
 import { LoadingScreen } from '@/components/ui/Spinner';
 import { useSettings } from '@/lib/hooks/useSettings';
+import { SUPPORTED_LANGUAGES } from '@/lib/storage/api';
 
 export default function App() {
   const { settings, loading, error, updateSettings } = useSettings();
@@ -13,6 +14,26 @@ export default function App() {
   const [patternError, setPatternError] = useState('');
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [langAvailability, setLangAvailability] = useState<Record<string, 'available' | 'unavailable' | 'checking'>>({});
+
+  useEffect(() => {
+    const initial: Record<string, 'checking'> = {};
+    for (const l of SUPPORTED_LANGUAGES) initial[l.code] = 'checking';
+    setLangAvailability(initial);
+
+    for (const lang of SUPPORTED_LANGUAGES) {
+      chrome.runtime.sendMessage({ type: 'check-availability', targetLanguage: lang.code })
+        .then((res: { available: boolean }) => {
+          setLangAvailability((prev) => ({
+            ...prev,
+            [lang.code]: res.available ? 'available' : 'unavailable',
+          }));
+        })
+        .catch(() => {
+          setLangAvailability((prev) => ({ ...prev, [lang.code]: 'unavailable' }));
+        });
+    }
+  }, []);
 
   if (loading) {
     return <LoadingScreen message="Loading settings..." />;
@@ -119,21 +140,80 @@ export default function App() {
           {/* Language Selection */}
           <Card title="Target Language">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Select language to learn
-              </label>
-              <select
-                value={settings.language}
-                disabled
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md disabled:bg-gray-100 disabled:cursor-not-allowed"
-              >
-                <option value="es">🇪🇸 Spanish (Active)</option>
-                <option disabled>🇫🇷 French (Coming Soon)</option>
-                <option disabled>🇩🇪 German (Coming Soon)</option>
-              </select>
-              <p className="text-xs text-gray-500 italic">
-                POC locked to Spanish. Additional languages coming soon!
-              </p>
+              <p className="text-sm text-gray-600 mb-3">Select the language you want to learn.</p>
+              <div className="space-y-2">
+                {[...SUPPORTED_LANGUAGES].sort((a, b) => {
+                  const PRIORITY: Record<string, number> = { available: 0, checking: 1, unavailable: 2 };
+                  const pa = PRIORITY[langAvailability[a.code] ?? 'checking'] ?? 1;
+                  const pb = PRIORITY[langAvailability[b.code] ?? 'checking'] ?? 1;
+                  if (pa !== pb) return pa - pb;
+                  return a.label.localeCompare(b.label);
+                }).map(({ code, label, flag }) => {
+                  const status = langAvailability[code];
+                  const isSelected = settings.language === code;
+                  const unavailable = status === 'unavailable';
+                  const checking = status === 'checking';
+
+                  if (unavailable) {
+                    return (
+                      <button
+                        key={code}
+                        title="Click to open Chrome's translation model download page"
+                        onClick={() =>
+                          chrome.tabs.create({ url: 'chrome://on-device-translation-internals/' })
+                        }
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-left cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors group"
+                      >
+                        <span className="flex items-center gap-2 text-gray-500">
+                          <span className="text-lg">{flag}</span>
+                          <span className="font-medium">{label}</span>
+                          <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">
+                            Model not downloaded
+                          </span>
+                        </span>
+                        <span className="text-xs text-blue-500 group-hover:text-blue-700 font-medium shrink-0 ml-2">
+                          Download model →
+                        </span>
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={code}
+                      onClick={() => !isSelected && handleUpdate({ language: code as SupportedLanguage })}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-2 text-left transition-colors ${
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 bg-white hover:border-blue-300 cursor-pointer'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg">{flag}</span>
+                        <span className={`font-medium ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
+                          {label}
+                        </span>
+                        {checking && (
+                          <span className="text-xs text-gray-400">Checking…</span>
+                        )}
+                      </span>
+                      {isSelected && (
+                        <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">
+                          Active
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {SUPPORTED_LANGUAGES.some(
+                ({ code }) => code !== 'es' && langAvailability[code] === 'unavailable'
+              ) && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Languages marked "Model not downloaded" require Chrome's on-device translation model.
+                  Clicking them opens the Chrome download page.
+                </p>
+              )}
             </div>
           </Card>
 

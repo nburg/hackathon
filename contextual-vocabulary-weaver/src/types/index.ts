@@ -1,5 +1,16 @@
+export type SupportedLanguage =
+  | 'af' | 'sq' | 'am' | 'ar' | 'az' | 'eu' | 'be' | 'bn' | 'bs' | 'bg'
+  | 'my' | 'ca' | 'zh-CN' | 'zh-TW' | 'hr' | 'cs' | 'da' | 'nl' | 'et'
+  | 'fil' | 'fi' | 'fr' | 'fy' | 'gl' | 'ka' | 'de' | 'el' | 'gu' | 'ha'
+  | 'he' | 'hi' | 'hu' | 'is' | 'ig' | 'id' | 'ga' | 'it' | 'ja' | 'kn'
+  | 'km' | 'ko' | 'ky' | 'lo' | 'lv' | 'ln' | 'lt' | 'lb' | 'mk' | 'ms'
+  | 'ml' | 'mt' | 'mr' | 'mn' | 'ne' | 'no' | 'or' | 'fa' | 'pl' | 'pt'
+  | 'pa' | 'ro' | 'ru' | 'gd' | 'sr' | 'sk' | 'sl' | 'so' | 'es' | 'sw'
+  | 'sv' | 'tl' | 'tg' | 'ta' | 'te' | 'th' | 'tr' | 'uk' | 'ur' | 'uz'
+  | 'vi' | 'cy' | 'zu';
+
 export interface Settings {
-  language: 'es'; // Locked to Spanish for POC
+  language: SupportedLanguage;
   density: number; // 1-10 (percentage)
   enabledSites: string[]; // Array of domains where extension is enabled
   isEnabled: boolean; // Global toggle

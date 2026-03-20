@@ -20,6 +20,7 @@ import {
   MAX_PKNOWN,
   COMMON_ENGLISH_WORDS,
   ENGLISH_WORD_RANK,
+  getTop200ForLanguage,
 } from './constants';
 
 // ============================================================================
@@ -348,16 +349,17 @@ export async function getRecentWords(limit: number = 20): Promise<WordStats[]> {
  * @returns true if user should transition to Phase 2, false otherwise
  */
 export async function shouldEnablePhase2(): Promise<boolean> {
-  const allStats = await getAllWordStats();
+  const [allStats, settings] = await Promise.all([getAllWordStats(), getSettings()]);
+  const wordList = getTop200ForLanguage(settings.targetLanguage);
 
   // Count how many top-200 words are known (WHERE pKnown >= 0.85)
-  const knownCount = TOP_200_COMMON_WORDS.filter((word) => {
+  const knownCount = wordList.filter((word) => {
     const stats = allStats[word];
     return stats && stats.pKnown >= KNOWN_THRESHOLD;
   }).length;
 
   // Calculate ratio (knownCount / total)
-  const knownRatio = knownCount / TOP_200_COMMON_WORDS.length;
+  const knownRatio = knownCount / wordList.length;
 
   // Check threshold (HAVING knownRatio >= 0.70)
   return knownRatio >= PHASE2_THRESHOLD;
