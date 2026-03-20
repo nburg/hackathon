@@ -89,6 +89,7 @@ export interface Settings {
   isEnabled: boolean; // Global toggle
   siteRegexPatterns: string[]; // Regex patterns — if non-empty, only matching URLs are altered
   disabledSites: string[]; // Hostnames where extension is explicitly disabled
+  immersionMode: boolean; // When true, mastered words are always replaced (for advanced learners)
 }
 
 export interface VocabularyWord {

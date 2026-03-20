@@ -153,5 +153,6 @@ function getDefaultSettings(): Settings {
     isEnabled: true,
     siteRegexPatterns: [],
     disabledSites: [],
+    immersionMode: false,
   };
 }

@@ -59,6 +59,8 @@ export default defineContentScript({
       pipeline.activatePhase2();
     }
 
+    const immersionMode = settings.immersionMode ?? false;
+
     // Listen for P5 writing currentPhase: 2 mid-session and re-run immediately.
     browser.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
@@ -66,11 +68,11 @@ export default defineContentScript({
       if (updated?.currentPhase === 2) {
         pipeline.activatePhase2();
         console.log('🎉 [CVW] Phase 2 activated! Switching to sentence-level translation.');
-        pipeline.run(densityFraction);
+        pipeline.run(densityFraction, immersionMode);
       }
     });
 
-    await pipeline.run(densityFraction);
+    await pipeline.run(densityFraction, immersionMode);
 
     // Check BKT threshold after this page's exposures — activates Phase 2 if met.
     checkAndTriggerPhase2().catch(() => {});

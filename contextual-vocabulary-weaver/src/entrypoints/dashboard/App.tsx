@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Toggle } from '@/components/ui/Toggle';
 import { KnowledgeDonut } from '@/components/dashboard/KnowledgeDonut';
 import { Phase2Bar } from '@/components/dashboard/Phase2Bar';
 import { StatsStrip } from '@/components/dashboard/StatsStrip';
@@ -18,7 +19,7 @@ type Tab = 'progress' | 'languages';
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('progress');
   const { vocabulary, loading, error } = useVocabulary();
-  const { settings } = useSettings();
+  const { settings, updateSettings } = useSettings();
 
   const langName =
     SUPPORTED_LANGUAGES.find((l) => l.code === settings?.language)?.label ?? 'your language';
@@ -135,6 +136,21 @@ export default function App() {
                 </Card>
               ) : (
                 <div className="space-y-6">
+                  {/* Immersion Mode toggle */}
+                  <Card title="Immersion Mode">
+                    <div className="flex items-start gap-4">
+                      <Toggle
+                        enabled={settings?.immersionMode ?? false}
+                        onChange={(enabled) => updateSettings({ immersionMode: enabled })}
+                        label="Always replace mastered words"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Mastered words are always translated on every page, so advanced learners
+                      gradually see entire pages in their target language.
+                    </p>
+                  </Card>
+
                   {/* Stats strip */}
                   <StatsStrip words={wordsList} />
 

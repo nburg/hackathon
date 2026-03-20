@@ -126,6 +126,19 @@ export default function App() {
             {saving && <p className="text-sm text-gray-500 mt-2">Saving...</p>}
           </Card>
 
+          {/* Immersion Mode */}
+          <Card title="Immersion Mode">
+            <Toggle
+              enabled={settings.immersionMode ?? false}
+              onChange={(enabled) => handleUpdate({ immersionMode: enabled })}
+              label="Always replace mastered words"
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              When enabled, words you have already mastered are always translated on every page — so
+              advanced learners gradually see entire pages in their target language.
+            </p>
+          </Card>
+
           {/* Density Slider */}
           <Card title="Word Replacement Density">
             <Slider

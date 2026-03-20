@@ -91,15 +91,16 @@ export class TranslationPipeline {
    * density, and swaps them in-place in the DOM.
    *
    * @param densityFraction  0.01–0.10, sourced from P2's settings slider
+   * @param immersionMode    When true, mastered words are always replaced in addition to the density selection
    */
-  async run(densityFraction: number): Promise<void> {
+  async run(densityFraction: number, immersionMode = false): Promise<void> {
     if (!this.translator) {
       console.warn('[CVW] Call init() before run().');
       return;
     }
 
     if (this.phase2Active) {
-      await this.runPhase2(densityFraction);
+      await this.runPhase2(densityFraction, immersionMode);
       return;
     }
 
@@ -117,8 +118,18 @@ export class TranslationPipeline {
       .map((c, i) => ({ candidate: c, score: scores[i] }))
       .sort((a, b) => b.score - a.score);
 
-    const count = Math.max(1, Math.round(ranked.length * densityFraction));
-    const selected = ranked.slice(0, count).map(({ candidate }) => candidate);
+    let selected: WordCandidate[];
+    if (immersionMode) {
+      // Mastered words have priority score 0.1 — always include them.
+      // Then apply density selection to the remaining (non-mastered) candidates.
+      const mastered = ranked.filter(({ score }) => score <= 0.1).map(({ candidate }) => candidate);
+      const nonMastered = ranked.filter(({ score }) => score > 0.1);
+      const extraCount = Math.max(0, Math.round(nonMastered.length * densityFraction));
+      selected = [...mastered, ...nonMastered.slice(0, extraCount).map(({ candidate }) => candidate)];
+    } else {
+      const count = Math.max(1, Math.round(ranked.length * densityFraction));
+      selected = ranked.slice(0, count).map(({ candidate }) => candidate);
+    }
 
     // Group by block ancestor (paragraph, heading, etc.) in document order,
     // then process each block sequentially so top-of-page translations appear first.
@@ -129,7 +140,7 @@ export class TranslationPipeline {
     }
   }
 
-  private async runPhase2(densityFraction: number): Promise<void> {
+  private async runPhase2(densityFraction: number, immersionMode = false): Promise<void> {
     const allCandidates = extractCandidates(document);
 
     // Proper nouns are still skipped; multi-word flag is irrelevant at sentence level.
@@ -152,8 +163,17 @@ export class TranslationPipeline {
       .map((sc, i) => ({ sc, score: scores[i] }))
       .sort((a, b) => b.score - a.score);
 
-    const count = Math.max(1, Math.round(ranked.length * densityFraction));
-    const selected = ranked.slice(0, count).map(({ sc }) => sc);
+    let selected: SentenceCandidate[];
+    if (immersionMode) {
+      // In immersion mode, always include sentences where all words are mastered (score <= 0.1).
+      const mastered = ranked.filter(({ score }) => score <= 0.1).map(({ sc }) => sc);
+      const nonMastered = ranked.filter(({ score }) => score > 0.1);
+      const extraCount = Math.max(0, Math.round(nonMastered.length * densityFraction));
+      selected = [...mastered, ...nonMastered.slice(0, extraCount).map(({ sc }) => sc)];
+    } else {
+      const count = Math.max(1, Math.round(ranked.length * densityFraction));
+      selected = ranked.slice(0, count).map(({ sc }) => sc);
+    }
 
     // Group by block ancestor in document order, then process sequentially.
     const byBlock = groupSentencesByBlock(selected);
