@@ -13,7 +13,12 @@ const LANGUAGE_LABELS: Record<string, string> = {
 };
 
 export default function App() {
-  const { settings, loading: settingsLoading, error: settingsError, updateSettings } = useSettings();
+  const {
+    settings,
+    loading: settingsLoading,
+    error: settingsError,
+    updateSettings,
+  } = useSettings();
   const { vocabulary, loading: vocabLoading, error: vocabError } = useVocabulary();
   const [disabling, setDisabling] = useState(false);
 
@@ -55,7 +60,7 @@ export default function App() {
         <div className="text-center">
           <div className="text-red-500 text-3xl mb-2">⚠️</div>
           <p className="text-sm text-gray-600 mb-3">{settingsError || vocabError}</p>
-          <Button fullWidth size="small" onClick={() => window.location.reload()}>
+          <Button fullWidth onClick={() => window.location.reload()}>
             Retry
           </Button>
         </div>

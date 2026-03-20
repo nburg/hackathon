@@ -41,7 +41,9 @@ export default function App() {
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Vocabulary Progress</h1>
-          <p className="text-gray-600">Track your {langName} learning journey as you browse the web</p>
+          <p className="text-gray-600">
+            Track your {langName} learning journey as you browse the web
+          </p>
         </div>
 
         <Card className="mb-8">
@@ -79,7 +81,9 @@ export default function App() {
                 <Button
                   variant="secondary"
                   onClick={() => {
-                    if (window.confirm(`Reset all ${langName} word progress? This cannot be undone.`)) {
+                    if (
+                      window.confirm(`Reset all ${langName} word progress? This cannot be undone.`)
+                    ) {
                       chrome.storage.local.remove(`word_stats_${settings?.language ?? 'es'}`);
                     }
                   }}

@@ -28,7 +28,7 @@ export function useSettings() {
       areaName: string
     ) => {
       if (areaName === 'sync' && changes[StorageKeys.SETTINGS]) {
-        setSettings(changes[StorageKeys.SETTINGS].newValue);
+        setSettings(changes[StorageKeys.SETTINGS].newValue as Settings);
       }
     };
     chrome.storage.onChanged.addListener(listener);

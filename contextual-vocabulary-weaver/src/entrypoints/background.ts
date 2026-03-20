@@ -18,7 +18,7 @@ let _translatorLang: string | null = null;
 async function getCurrentTargetLanguage(): Promise<string> {
   try {
     const result = await chrome.storage.local.get('settings');
-    return (result['settings'] as Record<string, unknown>)?.targetLanguage as string ?? 'es';
+    return ((result['settings'] as Record<string, unknown>)?.targetLanguage as string) ?? 'es';
   } catch {
     return 'es';
   }
@@ -37,7 +37,10 @@ async function getTranslatorForLanguage(lang: string) {
 
   try {
     console.log('[Background] Checking availability for lang:', lang);
-    const availability = await Translator.availability({ sourceLanguage: 'en', targetLanguage: lang });
+    const availability = await Translator.availability({
+      sourceLanguage: 'en',
+      targetLanguage: lang,
+    });
     console.log('[Background] Availability:', availability);
 
     if (availability === 'unavailable') {
@@ -61,17 +64,19 @@ async function getTranslatorForLanguage(lang: string) {
 export default defineBackground(() => {
   browser.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === 'install') {
-      browser.tabs.create({ url: browser.runtime.getURL('setup.html') });
+      browser.tabs.create({ url: browser.runtime.getURL('/setup.html') });
     }
   });
 
   // Warm up the translator on startup so the first page load isn't slow.
-  getCurrentTargetLanguage().then(lang => getTranslatorForLanguage(lang));
+  getCurrentTargetLanguage().then((lang) => getTranslatorForLanguage(lang));
 
   // Invalidate the cached translator when the language setting changes.
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !changes['settings']) return;
-    const newLang = (changes['settings'].newValue as Record<string, unknown>)?.targetLanguage as string | undefined;
+    const newLang = (changes['settings'].newValue as Record<string, unknown>)?.targetLanguage as
+      | string
+      | undefined;
     if (newLang && newLang !== _translatorLang) {
       _translator = null;
       _translatorLang = null;
@@ -102,22 +107,25 @@ export default defineBackground(() => {
         return false;
       }
       Translator.availability({ sourceLanguage: 'en', targetLanguage: lang })
-        .then(result => sendResponse({ available: result === 'available' }))
+        .then((result) => sendResponse({ available: result === 'available' }))
         .catch(() => sendResponse({ available: false }));
       return true;
     }
 
     if (msg.type === 'translate') {
       const text = msg.text as string;
-      getCurrentTargetLanguage().then(lang => getTranslatorForLanguage(lang)).then(t => {
-        if (!t) {
-          console.log('[Background] Using MyMemory API (Chrome Translator unavailable)');
-          sendResponse({ error: 'Translator not ready' });
-          return;
-        }
-        console.log('[Background] Using Chrome built-in Translator API');
-        return t.translate(text).then(translated => sendResponse({ translated }));
-      }).catch(e => sendResponse({ error: String(e) }));
+      getCurrentTargetLanguage()
+        .then((lang) => getTranslatorForLanguage(lang))
+        .then((t) => {
+          if (!t) {
+            console.log('[Background] Using MyMemory API (Chrome Translator unavailable)');
+            sendResponse({ error: 'Translator not ready' });
+            return;
+          }
+          console.log('[Background] Using Chrome built-in Translator API');
+          return t.translate(text).then((translated) => sendResponse({ translated }));
+        })
+        .catch((e) => sendResponse({ error: String(e) }));
       return true; // keep message channel open for async response
     }
 
