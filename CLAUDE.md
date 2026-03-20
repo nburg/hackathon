@@ -103,6 +103,30 @@ npm run compile      # TypeScript type-check only (tsc --noEmit)
 npm run lint         # ESLint over src/
 ```
 
+## Release Process
+
+When cutting a new release:
+
+1. **Update the version** in two places (both must match):
+   - `contextual-vocabulary-weaver/package.json` → `"version": "X.Y.Z"`
+   - `contextual-vocabulary-weaver/wxt.config.ts` → `version: 'X.Y.Z'` inside the `manifest` block
+   > `wxt.config.ts` is what Chrome reads — `package.json` alone is not enough.
+
+2. **Commit and push** the version bump to main.
+
+3. **Create and push a git tag:**
+   ```bash
+   git tag vX.Y
+   git push origin vX.Y
+   ```
+
+4. **Build and package:**
+   ```bash
+   cd contextual-vocabulary-weaver
+   npm run build
+   tar -czf ~/contextual-vocabulary-weaver-chrome-mv3.tar.gz -C .output chrome-mv3
+   ```
+
 ## Extension Architecture
 
 The WXT extension uses Manifest V3 with React + Tailwind. All entrypoints are under `src/entrypoints/`.
