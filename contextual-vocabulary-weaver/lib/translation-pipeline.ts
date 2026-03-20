@@ -125,7 +125,10 @@ export class TranslationPipeline {
       const mastered = ranked.filter(({ score }) => score <= 0.1).map(({ candidate }) => candidate);
       const nonMastered = ranked.filter(({ score }) => score > 0.1);
       const extraCount = Math.max(0, Math.round(nonMastered.length * densityFraction));
-      selected = [...mastered, ...nonMastered.slice(0, extraCount).map(({ candidate }) => candidate)];
+      selected = [
+        ...mastered,
+        ...nonMastered.slice(0, extraCount).map(({ candidate }) => candidate),
+      ];
     } else {
       const count = Math.max(1, Math.round(ranked.length * densityFraction));
       selected = ranked.slice(0, count).map(({ candidate }) => candidate);
