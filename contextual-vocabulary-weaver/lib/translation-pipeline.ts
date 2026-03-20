@@ -281,9 +281,25 @@ function buildPOSQuery(word: string, pos: string): string {
 }
 
 const BLOCK_TAGS = new Set([
-  'P', 'DIV', 'SECTION', 'ARTICLE', 'BLOCKQUOTE', 'LI',
-  'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
-  'TD', 'TH', 'FIGCAPTION', 'ASIDE', 'HEADER', 'FOOTER', 'MAIN',
+  'P',
+  'DIV',
+  'SECTION',
+  'ARTICLE',
+  'BLOCKQUOTE',
+  'LI',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'TD',
+  'TH',
+  'FIGCAPTION',
+  'ASIDE',
+  'HEADER',
+  'FOOTER',
+  'MAIN',
 ]);
 
 function getBlockAncestor(node: Node): Element {
@@ -402,19 +418,28 @@ function replaceSentenceInDom(sc: SentenceCandidate, translation: string): void 
   const sentenceNode = node.splitText(offset);
   const restNode = sentenceNode.splitText(sentence.length);
 
-  const span = createSentenceSpan(sentence, translation);
+  const span = createSentenceSpan(sentence, translation, parent as Element);
   parent.replaceChild(span, sentenceNode);
 
   void restNode; // already re-attached to the DOM by splitText
 }
 
-function createSentenceSpan(original: string, translation: string): HTMLSpanElement {
+function createSentenceSpan(
+  original: string,
+  translation: string,
+  contextEl?: Element
+): HTMLSpanElement {
   const span = document.createElement('span');
   span.className = 'cvw-sentence';
   span.dataset.original = original;
   span.dataset.translation = translation;
   span.textContent = translation;
   span.title = original;
+
+  // Apply contrast-maximising accent colors based on the actual background.
+  if (contextEl) {
+    applyAccentColors(span, pickSentenceAccentColors(getEffectiveBgLuminance(contextEl)));
+  }
 
   span.addEventListener('mouseenter', () => {
     span.textContent = original;
@@ -425,6 +450,97 @@ function createSentenceSpan(original: string, translation: string): HTMLSpanElem
 
   return span;
 }
+
+// ── Contrast-aware accent color utilities ────────────────────────────────────
+
+/** Parses "rgb(r, g, b)" or "rgba(r, g, b, a)" → [r, g, b] | null */
+function parseRgb(color: string): [number, number, number] | null {
+  const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  return m ? [+m[1], +m[2], +m[3]] : null;
+}
+
+/** WCAG 2.1 relative luminance for an sRGB triplet (0–255 each). */
+function relativeLuminance(r: number, g: number, b: number): number {
+  const lin = (c: number) => {
+    const s = c / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+/**
+ * Walks up the DOM from `el` to find the first non-transparent background
+ * color and returns its relative luminance. Falls back to 1.0 (white).
+ */
+function getEffectiveBgLuminance(el: Element): number {
+  let node: Element | null = el;
+  while (node) {
+    const bg = window.getComputedStyle(node).backgroundColor;
+    if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') {
+      const rgb = parseRgb(bg);
+      if (rgb) return relativeLuminance(...rgb);
+    }
+    node = node.parentElement;
+  }
+  return 1; // assume white background
+}
+
+interface AccentColors {
+  color: string;
+  border: string;
+  hoverColor: string;
+  hoverBorder: string;
+  hoverBg: string;
+}
+
+/** Returns green accent colors optimised for contrast against `bgLuminance`. */
+function pickWordAccentColors(bgLuminance: number): AccentColors {
+  return bgLuminance > 0.18
+    ? {
+        color: '#1b5e20',
+        border: '#2e7d32',
+        hoverColor: '#1b5e20',
+        hoverBorder: '#1b5e20',
+        hoverBg: '#e8f5e9',
+      }
+    : {
+        color: '#a5d6a7',
+        border: '#81c784',
+        hoverColor: '#c8e6c9',
+        hoverBorder: '#c8e6c9',
+        hoverBg: 'rgba(129,199,132,0.2)',
+      };
+}
+
+/** Returns blue accent colors optimised for contrast against `bgLuminance`. */
+function pickSentenceAccentColors(bgLuminance: number): AccentColors {
+  return bgLuminance > 0.18
+    ? {
+        color: '#1e3a8a',
+        border: '#1d4ed8',
+        hoverColor: '#1e3a8a',
+        hoverBorder: '#1d4ed8',
+        hoverBg: 'rgba(59,130,246,0.1)',
+      }
+    : {
+        color: '#93c5fd',
+        border: '#60a5fa',
+        hoverColor: '#bfdbfe',
+        hoverBorder: '#60a5fa',
+        hoverBg: 'rgba(96,165,250,0.15)',
+      };
+}
+
+/** Writes accent colors as CSS custom properties on a span's inline style. */
+function applyAccentColors(span: HTMLSpanElement, c: AccentColors): void {
+  span.style.setProperty('--cvw-color', c.color);
+  span.style.setProperty('--cvw-border', c.border);
+  span.style.setProperty('--cvw-hover-color', c.hoverColor);
+  span.style.setProperty('--cvw-hover-border', c.hoverBorder);
+  span.style.setProperty('--cvw-hover-bg', c.hoverBg);
+}
+
+// ── Text measurement ─────────────────────────────────────────────────────────
 
 // Reused across calls to avoid creating a new canvas every replacement.
 let _measureCanvas: HTMLCanvasElement | null = null;
@@ -454,6 +570,11 @@ function createWordSpan(
   span.dataset.translation = translation;
   span.textContent = translation;
   span.title = original; // fallback tooltip
+
+  // Apply contrast-maximising accent colors based on the actual background.
+  if (contextEl) {
+    applyAccentColors(span, pickWordAccentColors(getEffectiveBgLuminance(contextEl)));
+  }
 
   // Reserve the wider of the two strings' pixel widths so surrounding text
   // never reflows when toggling between translation and original on hover.

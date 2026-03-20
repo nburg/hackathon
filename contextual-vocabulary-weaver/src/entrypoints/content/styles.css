@@ -58,9 +58,11 @@
 /* ── P4 pipeline spans ─────────────────────────────────────────────────────── */
 
 /* Phase 1: individual replaced words */
+/* Colors are set dynamically via --cvw-* CSS variables by translation-pipeline.ts
+   to maximize contrast against the actual background. The values below are fallbacks. */
 .cvw-word {
-  border-bottom: 2px dashed #4CAF50;
-  color: #2e7d32;
+  border-bottom: 2px dashed var(--cvw-border, #4CAF50);
+  color: var(--cvw-color, #2e7d32);
   cursor: help;
   padding: 0 2px;
   display: inline;
@@ -70,15 +72,15 @@
 }
 
 .cvw-word:hover {
-  background-color: #e8f5e9;
-  border-bottom-color: #1b5e20;
-  color: #1b5e20;
+  background-color: var(--cvw-hover-bg, #e8f5e9);
+  border-bottom-color: var(--cvw-hover-border, #1b5e20);
+  color: var(--cvw-hover-color, #1b5e20);
 }
 
 /* Phase 2: full translated sentences */
 .cvw-sentence {
-  border-bottom: 2px solid #3b82f6;
-  color: #1d4ed8;
+  border-bottom: 2px solid var(--cvw-border, #3b82f6);
+  color: var(--cvw-color, #1d4ed8);
   cursor: help;
   display: inline;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
@@ -86,26 +88,24 @@
 }
 
 .cvw-sentence:hover {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #1e3a8a;
+  background-color: var(--cvw-hover-bg, rgba(59, 130, 246, 0.1));
+  color: var(--cvw-hover-color, #1e3a8a);
 }
 
 @media (prefers-color-scheme: dark) {
   .cvw-word {
-    border-bottom-color: #81c784;
-    color: #a5d6a7;
-  }
-  .cvw-word:hover {
-    background-color: rgba(129, 199, 132, 0.2);
-    color: #c8e6c9;
+    --cvw-color: #a5d6a7;
+    --cvw-border: #81c784;
+    --cvw-hover-color: #c8e6c9;
+    --cvw-hover-border: #c8e6c9;
+    --cvw-hover-bg: rgba(129, 199, 132, 0.2);
   }
   .cvw-sentence {
-    border-bottom-color: #60a5fa;
-    color: #93c5fd;
-  }
-  .cvw-sentence:hover {
-    background-color: rgba(96, 165, 250, 0.15);
-    color: #bfdbfe;
+    --cvw-color: #93c5fd;
+    --cvw-border: #60a5fa;
+    --cvw-hover-color: #bfdbfe;
+    --cvw-hover-border: #60a5fa;
+    --cvw-hover-bg: rgba(96, 165, 250, 0.15);
   }
 }
 

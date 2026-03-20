@@ -33,7 +33,7 @@ export default defineConfig({
   },
   manifest: {
     name: 'Contextual Vocabulary Weaver',
-    version: '0.10.0',
+    version: '0.11.0',
     permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['<all_urls>'],
     action: {},
