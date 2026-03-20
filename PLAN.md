@@ -37,8 +37,6 @@ Role 1 (duplicate `background.ts` cleanup) should be done first to avoid confusi
 ### Tasks
 - [ ] **Multi-language architecture** — Replace hardcoded Spanish logic with a language-agnostic pipeline; store the target language in settings (already has `settings.language`) and pass it through the translation pipeline
 - [ ] **Common-words key-value store** — Move the "top-N most common words" logic out of inline code into a local data file (`lib/common-words/<lang>.json`); research and populate word lists for at least 2–3 languages; prompt the user to select a language on first run if not set
-- [ ] **Third-party translation fallback** — Add support for open-source browsers (Firefox) where `window.ai.translator` / Chrome's built-in Translation API is unavailable; integrate a fallback open-source translation library or API; update the setup page to reflect browser-specific instructions
-
 ### Depends on
 Role 1 code review (to avoid building on top of code flagged for refactor).
 
